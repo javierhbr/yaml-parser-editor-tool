@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { FileText, Code2 } from 'lucide-react';
+import { FileText, Code2, Globe } from 'lucide-react';
 
 interface LayoutProps {
   children: {
     yamlAnchorEditor: React.ReactNode;
     uiYamlEditor: React.ReactNode;
+    webServiceMocksEditor: React.ReactNode;
   };
 }
 
-type TabType = 'anchor-editor' | 'ui-editor';
+type TabType = 'anchor-editor' | 'ui-editor' | 'webservice-mocks';
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<TabType>('anchor-editor');
@@ -25,6 +26,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       label: 'UI YAML Editor',
       icon: Code2,
       description: 'Interactive YAML editor with visual interface',
+    },
+    {
+      id: 'webservice-mocks' as TabType,
+      label: 'WebService Mocks',
+      icon: Globe,
+      description: 'Manage mock webservice responses with HTTP status codes',
     },
   ];
 
@@ -79,6 +86,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
         <div className={`${activeTab === 'ui-editor' ? 'block' : 'hidden'}`}>
           {children.uiYamlEditor}
+        </div>
+        <div className={`${activeTab === 'webservice-mocks' ? 'block' : 'hidden'}`}>
+          {children.webServiceMocksEditor}
         </div>
       </main>
     </div>

@@ -1,0 +1,166 @@
+# Sample WebService Mocks - New Structure
+# Import this file to test the WebService Mocks functionality
+
+webservices:
+  'User Management API':
+    base_url: 'https://api.example.com/users'
+    mocks:
+      get_user_success: &user-success
+        http_status: 200
+        response:
+          id: 123
+          name: 'John Doe'
+          email: 'john.doe@example.com'
+          role: 'admin'
+          created_at: '2024-01-15T09:30:00Z'
+          profile:
+            avatar_url: 'https://cdn.example.com/avatars/john.jpg'
+            preferences:
+              theme: 'dark'
+              notifications: true
+      get_user_not_found:
+        http_status: 404
+        response:
+          error: 'User not found'
+          code: 'USER_NOT_FOUND'
+          message: 'The requested user does not exist'
+      create_user_success:
+        http_status: 201
+        response:
+          id: 124
+          name: 'Jane Smith'
+          email: 'jane.smith@example.com'
+          role: 'user'
+          created_at: '2024-01-16T14:22:00Z'
+      validation_error:
+        http_status: 400
+        <<: *common-validation-error
+
+  'Authentication Service':
+    base_url: 'https://auth.example.com'
+    mocks:
+      login_success: &auth-success
+        http_status: 200
+        response:
+          access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+          refresh_token: 'def502001234567890abcdef...'
+          expires_in: 3600
+          token_type: 'Bearer'
+          user:
+            id: 123
+            name: 'John Doe'
+            email: 'john.doe@example.com'
+      login_invalid_credentials:
+        http_status: 401
+        response:
+          error: 'invalid_credentials'
+          error_description: 'The username or password is incorrect'
+          code: 'AUTH_FAILED'
+      token_expired:
+        http_status: 401
+        response:
+          error: 'token_expired'
+          error_description: 'The access token has expired'
+          code: 'TOKEN_EXPIRED'
+      server_error:
+        <<: *common-server-error
+
+  'Payment Processing API':
+    base_url: 'https://payments.example.com'
+    mocks:
+      payment_success: &payment-success
+        http_status: 200
+        response:
+          transaction_id: 'txn_1234567890'
+          amount: 99.99
+          currency: 'USD'
+          status: 'completed'
+          payment_method:
+            type: 'credit_card'
+            last_four: '4242'
+            brand: 'visa'
+          created_at: '2024-01-16T10:30:00Z'
+      payment_failed:
+        http_status: 402
+        response:
+          error: 'payment_failed'
+          code: 'PAYMENT_DECLINED'
+          message: 'Your card was declined'
+          decline_reason: 'insufficient_funds'
+          transaction_id: 'txn_1234567891'
+      payment_processing:
+        http_status: 202
+        response:
+          transaction_id: 'txn_1234567892'
+          status: 'processing'
+          message: 'Payment is being processed'
+      rate_limit_exceeded:
+        <<: *common-rate-limit
+
+  'Notification Service':
+    base_url: 'https://notifications.example.com'
+    mocks:
+      send_email_success:
+        http_status: 200
+        response:
+          message_id: 'msg_abc123'
+          status: 'sent'
+          recipient: 'user@example.com'
+          subject: 'Welcome to our service'
+          sent_at: '2024-01-16T11:45:00Z'
+      send_sms_success:
+        http_status: 200
+        response:
+          message_id: 'sms_def456'
+          status: 'delivered'
+          phone_number: '+1234567890'
+          message: 'Your verification code is 123456'
+          delivered_at: '2024-01-16T11:46:00Z'
+      rate_limit_exceeded:
+        <<: *common-rate-limit
+
+common_responses:
+  server_error: &common-server-error
+    http_status: 500
+    response:
+      error: 'internal_server_error'
+      message: 'An unexpected error occurred'
+      code: 'INTERNAL_ERROR'
+      timestamp: '2024-01-16T12:00:00Z'
+      request_id: 'req_abc123def456'
+
+  validation_error: &common-validation-error
+    http_status: 400
+    response:
+      error: 'validation_error'
+      message: 'The request data is invalid'
+      code: 'VALIDATION_FAILED'
+      details:
+        - field: 'email'
+          message: 'Invalid email format'
+        - field: 'password'
+          message: 'Password must be at least 8 characters'
+
+  rate_limit: &common-rate-limit
+    http_status: 429
+    response:
+      error: 'rate_limit_exceeded'
+      message: 'Too many requests'
+      retry_after: 60
+      limit: 1000
+      remaining: 0
+      reset_at: '2024-01-16T13:00:00Z'
+
+  unauthorized: &common-unauthorized
+    http_status: 401
+    response:
+      error: 'unauthorized'
+      message: 'Authentication required'
+      code: 'AUTH_REQUIRED'
+
+  forbidden: &common-forbidden
+    http_status: 403
+    response:
+      error: 'forbidden'
+      message: 'Access denied'
+      code: 'ACCESS_DENIED'

@@ -18,7 +18,7 @@ const YAMLAnchorEditor: React.FC = () => {
     data, 
     setData, 
     fileName, 
-    anchors, 
+    allAnchors: anchors, 
     references, 
     loadFromFile, 
     exportYaml, 

@@ -11,7 +11,7 @@ const UIYamlEditor: React.FC = () => {
   const { 
     data: formData, 
     setData: setFormData, 
-    anchors, 
+    allAnchors: anchors, 
     references, 
     loadFromFile, 
     exportYaml 

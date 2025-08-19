@@ -1,0 +1,40 @@
+# Simple WebService Mocks Example - New Structure  
+# A minimal example to test the WebService Mocks functionality
+
+webservices:
+  'Simple API Service':
+    base_url: 'https://jsonplaceholder.typicode.com'
+    mocks:
+      get_posts_success: &posts-success
+        http_status: 200
+        response:
+          - id: 1
+            title: 'First Post'
+            body: 'This is the body of the first post'
+            userId: 1
+          - id: 2
+            title: 'Second Post'
+            body: 'This is the body of the second post'
+            userId: 2
+
+      get_post_success:
+        http_status: 200
+        response:
+          id: 1
+          title: 'Sample Post'
+          body: 'This is a sample post body'
+          userId: 1
+
+      post_not_found:
+        http_status: 404
+        response:
+          error: 'Post not found'
+          message: 'The requested post does not exist'
+
+common_responses:
+  generic_error: &generic-error
+    http_status: 500
+    response:
+      error: 'Internal Server Error'
+      message: 'Something went wrong on the server'
+      timestamp: '2024-01-16T10:30:00Z'

@@ -58,8 +58,9 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   };
   if (typeof value === 'object' && value !== null) {
     const isArray = Array.isArray(value);
-    const hasReference = value.referenceOf;
-    const hasAnchor = value.anchor;
+    const valueObj = value as Record<string, unknown>;
+    const hasReference = valueObj.referenceOf;
+    const hasAnchor = valueObj.anchor;
 
     return (
       <div key={path} className="ml-4">
@@ -76,14 +77,14 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           {showMetadata && hasAnchor && (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
               <Anchor size={12} />
-              {value.anchor}
+              {String(valueObj.anchor)}
             </span>
           )}
 
           {showMetadata && hasReference && (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
               <Link size={12} />
-              {value.referenceOf}
+              {String(valueObj.referenceOf)}
             </span>
           )}
 
