@@ -21,7 +21,7 @@ interface AnchorRegistry {
 export function generateYamlFromJson(jsonObj: any): string {
   const registry: AnchorRegistry = {
     anchoredObjects: new Map(),
-    usedAnchors: new Set()
+    usedAnchors: new Set(),
   };
 
   // First pass: collect all anchored objects
@@ -37,7 +37,7 @@ export function generateYamlFromJson(jsonObj: any): string {
   return yamlDoc.toString({
     indent: 2,
     lineWidth: 80,
-    minContentWidth: 20
+    minContentWidth: 20,
   });
 }
 
@@ -50,7 +50,7 @@ function collectAnchors(obj: any, registry: AnchorRegistry): void {
   }
 
   if (Array.isArray(obj)) {
-    obj.forEach(item => collectAnchors(item, registry));
+    obj.forEach((item) => collectAnchors(item, registry));
     return;
   }
 
@@ -63,7 +63,7 @@ function collectAnchors(obj: any, registry: AnchorRegistry): void {
   }
 
   // Recursively check all properties
-  Object.values(obj).forEach(value => collectAnchors(value, registry));
+  Object.values(obj).forEach((value) => collectAnchors(value, registry));
 }
 
 /**
@@ -75,7 +75,7 @@ function processObjectForYaml(obj: any, registry: AnchorRegistry): any {
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(item => processObjectForYaml(item, registry));
+    return obj.map((item) => processObjectForYaml(item, registry));
   }
 
   // Handle objects with referenceOf (these should become references)
@@ -92,11 +92,11 @@ function processObjectForYaml(obj: any, registry: AnchorRegistry): any {
     if (hasOtherProperties) {
       // This is a merge reference - use <<: *anchor and include other properties
       const result: any = {
-        '<<': `*${anchorName}`  // This will be converted to proper YAML merge key
+        '<<': `*${anchorName}`, // This will be converted to proper YAML merge key
       };
 
       // Add all other properties
-      Object.keys(objWithoutRef).forEach(key => {
+      Object.keys(objWithoutRef).forEach((key) => {
         result[key] = processObjectForYaml(objWithoutRef[key], registry);
       });
 
@@ -115,7 +115,7 @@ function processObjectForYaml(obj: any, registry: AnchorRegistry): any {
 
     // Process the clean object recursively
     const processedObj: { [key: string]: any } = {};
-    Object.keys(cleanObj).forEach(key => {
+    Object.keys(cleanObj).forEach((key) => {
       processedObj[key] = processObjectForYaml(cleanObj[key], registry);
     });
 
@@ -125,7 +125,7 @@ function processObjectForYaml(obj: any, registry: AnchorRegistry): any {
 
   // Regular object - process all properties
   const result: { [key: string]: any } = {};
-  Object.keys(obj).forEach(key => {
+  Object.keys(obj).forEach((key) => {
     result[key] = processObjectForYaml(obj[key], registry);
   });
 
@@ -140,7 +140,7 @@ function createAnchoredObject(obj: any, anchorName: string): any {
   // that will be handled during YAML generation
   return {
     ...obj,
-    [Symbol.for('yaml.anchor')]: anchorName
+    [Symbol.for('yaml.anchor')]: anchorName,
   };
 }
 
@@ -150,7 +150,7 @@ function createAnchoredObject(obj: any, anchorName: string): any {
 export function generateYamlWithCustomHandling(jsonObj: any): string {
   const registry: AnchorRegistry = {
     anchoredObjects: new Map(),
-    usedAnchors: new Set()
+    usedAnchors: new Set(),
   };
 
   // Collect anchors and process object
@@ -165,7 +165,7 @@ export function generateYamlWithCustomHandling(jsonObj: any): string {
   const yamlString = doc.toString({
     indent: 2,
     lineWidth: 80,
-    minContentWidth: 20
+    minContentWidth: 20,
   });
 
   // Manual post-processing to fix merge key syntax and references
@@ -242,17 +242,17 @@ function convertToYaml(obj: any, indentLevel: number = 0): string[] {
   }
 
   if (Array.isArray(obj)) {
-    obj.forEach(item => {
+    obj.forEach((item) => {
       if (item && typeof item === 'object' && item.referenceOf) {
         // Handle references in arrays
-        const otherProps = Object.keys(item).filter(k => k !== 'referenceOf' && k !== 'anchor');
+        const otherProps = Object.keys(item).filter((k) => k !== 'referenceOf' && k !== 'anchor');
         if (otherProps.length === 0) {
           // Direct reference
           lines.push(`${indent}- *${item.referenceOf}`);
         } else {
           // Merge reference with additional properties
           lines.push(`${indent}- <<: *${item.referenceOf}`);
-          otherProps.forEach(prop => {
+          otherProps.forEach((prop) => {
             const value = item[prop];
             if (typeof value === 'object' && value !== null) {
               lines.push(`${indent}  ${prop}:`);
@@ -271,7 +271,7 @@ function convertToYaml(obj: any, indentLevel: number = 0): string[] {
             const anchorName = item.anchor;
             const cleanItem = { ...item };
             delete cleanItem.anchor;
-            
+
             // If the object has properties other than anchor
             const hasContent = Object.keys(cleanItem).length > 0;
             if (hasContent) {
@@ -307,7 +307,7 @@ function convertToYaml(obj: any, indentLevel: number = 0): string[] {
   }
 
   // Handle regular objects
-  Object.keys(obj).forEach(key => {
+  Object.keys(obj).forEach((key) => {
     if (key === 'anchor' || key === 'referenceOf') {
       return; // Skip metadata properties
     }
@@ -316,10 +316,12 @@ function convertToYaml(obj: any, indentLevel: number = 0): string[] {
 
     if (value && typeof value === 'object' && value.referenceOf && !Array.isArray(value)) {
       // This property is a reference - check for other properties
-      const otherProps = Object.keys(value).filter(k => 
-        k !== 'referenceOf' && k !== 'anchor' && 
-        // Skip properties that are exactly the same as in the referenced object
-        !isRedundantProperty(k, value)
+      const otherProps = Object.keys(value).filter(
+        (k) =>
+          k !== 'referenceOf' &&
+          k !== 'anchor' &&
+          // Skip properties that are exactly the same as in the referenced object
+          !isRedundantProperty(k, value)
       );
 
       if (otherProps.length === 0) {
@@ -329,7 +331,7 @@ function convertToYaml(obj: any, indentLevel: number = 0): string[] {
         // Has additional/override properties - use merge
         lines.push(`${indent}${key}:`);
         lines.push(`${indent}  <<: *${value.referenceOf}`);
-        otherProps.forEach(prop => {
+        otherProps.forEach((prop) => {
           const propValue = value[prop];
           if (typeof propValue === 'object' && propValue !== null && !Array.isArray(propValue)) {
             lines.push(`${indent}  ${prop}:`);
@@ -375,18 +377,30 @@ function isRedundantProperty(key: string, obj: any): boolean {
   // This is a simplified check - in a full implementation you'd need to track
   // the actual referenced object's properties
   const redundantKeys = [
-    'enabled', 'frequency', 'retention_days', 'compression', 
-    'encryption', 'storage_locations', 'driver', 'port', 
-    'timeout', 'pool_size', 'ssl_mode', 'retry_attempts', 
-    'connection_params', 'algorithm', 'host', 'database'
+    'enabled',
+    'frequency',
+    'retention_days',
+    'compression',
+    'encryption',
+    'storage_locations',
+    'driver',
+    'port',
+    'timeout',
+    'pool_size',
+    'ssl_mode',
+    'retry_attempts',
+    'connection_params',
+    'algorithm',
+    'host',
+    'database',
   ];
-  
+
   // If it's a known base property and has a referenceOf, it's likely redundant
   if (redundantKeys.includes(key) && obj.referenceOf) {
     // Additional logic could check if the value matches the referenced object's value
     return true;
   }
-  
+
   return false;
 }
 
@@ -400,8 +414,12 @@ function formatScalarValue(value: any): string {
 
   if (typeof value === 'string') {
     // Check if the string needs quoting
-    if (value.includes(':') || value.includes('\n') || value.match(/^\d/) ||
-        ['true', 'false', 'null', 'yes', 'no', 'on', 'off'].includes(value.toLowerCase())) {
+    if (
+      value.includes(':') ||
+      value.includes('\n') ||
+      value.match(/^\d/) ||
+      ['true', 'false', 'null', 'yes', 'no', 'on', 'off'].includes(value.toLowerCase())
+    ) {
       return `"${value}"`;
     }
     return value;

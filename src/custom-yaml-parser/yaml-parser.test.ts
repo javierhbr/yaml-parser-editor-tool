@@ -17,7 +17,7 @@ describe('YAML Parser with Metadata', () => {
       expect(result).toEqual({
         name: 'John Doe',
         age: 30,
-        active: true
+        active: true,
       });
     });
 
@@ -39,7 +39,7 @@ describe('YAML Parser with Metadata', () => {
       const result = parseYamlString(yamlContent);
 
       expect(result).toEqual({
-        fruits: ['apple', 'banana', 'orange']
+        fruits: ['apple', 'banana', 'orange'],
       });
     });
   });
@@ -174,7 +174,6 @@ describe('YAML Parser with Metadata', () => {
       console.log(JSON.stringify(result));
       expect(result).toBeDefined();
     });
-
   });
 
   describe('Edge cases', () => {

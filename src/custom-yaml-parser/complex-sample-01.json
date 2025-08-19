@@ -1,1 +1,1243 @@
-    {"database_configs":{"base_db":{"driver":"postgresql","port":5432,"timeout":30,"pool_size":10,"ssl_mode":"require","retry_attempts":3,"connection_params":{"charset":"utf8","timezone":"UTC"},"anchor":"base_database"},"prod_db":{"driver":"postgresql","port":5432,"timeout":30,"pool_size":50,"ssl_mode":"require","retry_attempts":3,"connection_params":{"charset":"utf8","timezone":"UTC"},"referenceOf":"base_database","host":"prod-db.company.com","database":"production_app","backup_enabled":true,"anchor":"production_database"},"dev_db":{"driver":"postgresql","port":5433,"timeout":30,"pool_size":10,"ssl_mode":"disable","retry_attempts":3,"connection_params":{"charset":"utf8","timezone":"UTC"},"referenceOf":"base_database","host":"dev-db.company.com","database":"dev_app","anchor":"development_database"}},"server_configs":{"base_server":{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"anchor":"base_server_config"},"load_balancer":{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","algorithm":"round_robin","health_check":{"enabled":true,"interval":30,"timeout":10,"path":"/health"},"anchor":"lb_config"}},"monitoring":{"enabled":true,"metrics":["cpu_usage","memory_usage","disk_usage","network_io"],"alerts":{"cpu_threshold":80,"memory_threshold":85,"disk_threshold":90},"notification_channels":[{"email":"admin@company.com"},{"slack":"#alerts"},{"webhook":"https://monitoring.company.com/webhook"}],"anchor":"monitoring_base"},"security_base":{"authentication":{"method":"oauth2","providers":["google","github","azure_ad"],"session_timeout":3600,"refresh_token_ttl":604800},"encryption":{"algorithm":"AES-256-GCM","key_rotation_days":90},"audit":{"enabled":true,"log_level":"INFO","retention_days":365},"anchor":"security_config"},"environments":{"production":{"name":"Production Environment","databases":{"primary":{"driver":"postgresql","port":5432,"timeout":30,"pool_size":50,"ssl_mode":"require","retry_attempts":3,"connection_params":{"charset":"utf8","timezone":"UTC"},"referenceOf":"production_database","host":"prod-db.company.com","database":"production_app","backup_enabled":true,"credentials":{"username":"PROD_DB_USER","password":"PROD_DB_PASS"}},"read_replica":{"driver":"postgresql","port":5432,"timeout":30,"pool_size":50,"ssl_mode":"require","retry_attempts":3,"connection_params":{"charset":"utf8","timezone":"UTC"},"referenceOf":"production_database","host":"prod-db-replica.company.com","database":"production_app","backup_enabled":true,"readonly":true},"cache":{"driver":"redis","port":6379,"timeout":30,"pool_size":10,"ssl_mode":"require","retry_attempts":3,"connection_params":{"charset":"utf8","timezone":"UTC"},"referenceOf":"base_database","host":"prod-redis.company.com"}},"servers":{"web_servers":[{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"web-01","host":"web-01.prod.company.com","port":443,"resources":{"cpu":4,"memory":"8GB","disk":"100GB"}},{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"web-02","host":"web-02.prod.company.com","port":443,"resources":{"cpu":4,"memory":"8GB","disk":"100GB"}},{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"web-03","host":"web-03.prod.company.com","port":443,"resources":{"cpu":4,"memory":"8GB","disk":"100GB"}}],"api_servers":[{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"api-01","host":"api-01.prod.company.com","port":8443,"resources":{"cpu":8,"memory":"16GB","disk":"200GB"}},{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"api-02","host":"api-02.prod.company.com","port":8443,"resources":{"cpu":8,"memory":"16GB","disk":"200GB"}}],"load_balancers":[{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"lb_config","algorithm":"round_robin","health_check":{"enabled":true,"interval":30,"timeout":10,"path":"/health"},"name":"lb-main","host":"lb.prod.company.com","backend_servers":{"0":{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"web-01","host":"web-01.prod.company.com","port":443,"resources":{"cpu":4,"memory":"8GB","disk":"100GB"}},"1":{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"web-02","host":"web-02.prod.company.com","port":443,"resources":{"cpu":4,"memory":"8GB","disk":"100GB"}},"2":{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"web-03","host":"web-03.prod.company.com","port":443,"resources":{"cpu":4,"memory":"8GB","disk":"100GB"}},"referenceOf":"prod_web_servers"}},{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"lb_config","algorithm":"round_robin","health_check":{"enabled":true,"interval":30,"timeout":10,"path":"/health"},"name":"lb-api","host":"api-lb.prod.company.com","backend_servers":{"0":{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"api-01","host":"api-01.prod.company.com","port":8443,"resources":{"cpu":8,"memory":"16GB","disk":"200GB"}},"1":{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"api-02","host":"api-02.prod.company.com","port":8443,"resources":{"cpu":8,"memory":"16GB","disk":"200GB"}},"referenceOf":"prod_api_servers"}}]},"monitoring":{"enabled":true,"metrics":["cpu_usage","memory_usage","disk_usage","network_io"],"alerts":{"cpu_threshold":80,"memory_threshold":85,"disk_threshold":90,"custom_thresholds":{"response_time":"500ms","error_rate":"1%"}},"notification_channels":{"0":{"email":"admin@company.com"},"1":{"slack":"#alerts"},"2":{"webhook":"https://monitoring.company.com/webhook"},"referenceOf":"notification_channels"},"referenceOf":"monitoring_base"},"security":{"authentication":{"method":"oauth2","providers":["google","github","azure_ad"],"session_timeout":3600,"refresh_token_ttl":604800},"encryption":{"algorithm":"AES-256-GCM","key_rotation_days":90},"audit":{"enabled":true,"log_level":"INFO","retention_days":365},"referenceOf":"security_config","additional_rules":[{"block_tor_exits":true},{"geo_blocking":["CN","RU","KP"]},{"ddos_protection":"enabled"}]}},"staging":{"name":"Staging Environment","databases":{"primary":{"driver":"postgresql","port":5433,"timeout":30,"pool_size":10,"ssl_mode":"disable","retry_attempts":3,"connection_params":{"charset":"utf8","timezone":"UTC"},"referenceOf":"development_database","host":"staging-db.company.com","database":"staging_app"},"cache":{"driver":"redis","port":6379,"timeout":30,"pool_size":10,"ssl_mode":"require","retry_attempts":3,"connection_params":{"charset":"utf8","timezone":"UTC"},"referenceOf":"base_database","host":"staging-redis.company.com"}},"servers":{"web_servers":[{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"staging-web","host":"staging-web.company.com","port":443,"resources":{"cpu":2,"memory":"4GB","disk":"50GB"}}],"api_servers":[{"protocol":"https","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"staging-api","host":"staging-api.company.com","port":8443,"resources":{"cpu":4,"memory":"8GB","disk":"100GB"}}]},"monitoring":{"enabled":true,"metrics":["cpu_usage","memory_usage","disk_usage","network_io"],"alerts":{"cpu_threshold":90,"memory_threshold":90,"disk_threshold":95},"notification_channels":[{"email":"dev-team@company.com"},{"slack":"#staging-alerts"}],"referenceOf":"monitoring_base"},"security":{"authentication":{"method":"basic_auth","session_timeout":3600},"encryption":{"algorithm":"AES-256-GCM","key_rotation_days":90},"audit":{"enabled":true,"log_level":"INFO","retention_days":365},"referenceOf":"security_config"}},"development":{"name":"Development Environment","databases":{"primary":{"driver":"postgresql","port":5433,"timeout":30,"pool_size":10,"ssl_mode":"disable","retry_attempts":3,"connection_params":{"charset":"utf8","timezone":"UTC"},"referenceOf":"development_database","host":"dev-db.company.com","database":"dev_app"}},"servers":{"web_servers":[{"protocol":"http","timeout":60,"max_connections":1000,"compression":"gzip","security":{"cors_enabled":true,"rate_limiting":true,"headers":[{"X-Content-Type-Options":"nosniff"},{"X-Frame-Options":"DENY"},{"X-XSS-Protection":"1; mode=block"}]},"referenceOf":"base_server_config","name":"dev-web","host":"localhost","port":3000,"resources":{"cpu":1,"memory":"2GB","disk":"20GB"}}]},"monitoring":{"enabled":false},"security":{"authentication":{"method":"none"},"encryption":{"algorithm":"AES-256-GCM","key_rotation_days":30},"audit":{"enabled":false}}}},"services":{"microservices":{"user_service":{"name":"user-service","version":"2.1.0","port":8001,"database":"primary","dependencies":["auth-service","notification-service"],"resources":{"cpu":0.5,"memory":"1GB","disk":"10GB","anchor":"service_resources_small"},"health_check":{"path":"/health","interval":30,"timeout":5},"anchor":"user_service_base"},"auth_service":{"name":"auth-service","version":"1.5.2","port":8002,"database":"primary","dependencies":[],"resources":{"cpu":0.5,"memory":"1GB","disk":"10GB","referenceOf":"service_resources_small"},"config":{"providers":{"0":"google","1":"github","2":"azure_ad","referenceOf":"auth_providers"},"session_timeout":3600,"refresh_token_ttl":604800},"anchor":"auth_service_base"},"notification_service":{"name":"notification-service","version":"1.2.1","port":8003,"database":"cache","dependencies":["user-service"],"resources":{"cpu":1,"memory":"2GB","disk":"20GB","anchor":"service_resources_medium"},"channels":{"0":{"email":"admin@company.com"},"1":{"slack":"#alerts"},"2":{"webhook":"https://monitoring.company.com/webhook"},"referenceOf":"notification_channels"},"anchor":"notification_service_base"},"analytics_service":{"name":"analytics-service","version":"3.0.0","port":8004,"database":"primary","dependencies":["user-service","notification-service"],"resources":{"cpu":4,"memory":"8GB","disk":"100GB","anchor":"service_resources_large"},"config":{"retention_days":365},"anchor":"analytics_service_base"}}},"deployments":{"production_deployment":{"environment":"production","services":{"user_service":{"name":"user-service","version":"2.1.0","port":8001,"database":"primary","dependencies":["auth-service","notification-service"],"resources":{"cpu":1,"memory":"2GB","disk":"20GB","referenceOf":"service_resources_medium"},"health_check":{"path":"/health","interval":30,"timeout":5},"referenceOf":"user_service_base","replicas":3,"environment_variables":{"DB_HOST":"environments.production.databases.primary.host","DB_NAME":"environments.production.databases.primary.database"}},"auth_service":{"name":"auth-service","version":"1.5.2","port":8002,"database":"primary","dependencies":[],"resources":{"cpu":0.5,"memory":"1GB","disk":"10GB","referenceOf":"service_resources_small"},"config":{"providers":{"0":"google","1":"github","2":"azure_ad","referenceOf":"auth_providers"},"session_timeout":3600,"refresh_token_ttl":604800},"referenceOf":"auth_service_base","replicas":2},"notification_service":{"name":"notification-service","version":"1.2.1","port":8003,"database":"cache","dependencies":["user-service"],"resources":{"cpu":1,"memory":"2GB","disk":"20GB","referenceOf":"service_resources_medium"},"channels":{"0":{"email":"admin@company.com"},"1":{"slack":"#alerts"},"2":{"webhook":"https://monitoring.company.com/webhook"},"referenceOf":"notification_channels"},"referenceOf":"notification_service_base","replicas":2},"analytics_service":{"name":"analytics-service","version":"3.0.0","port":8004,"database":"primary","dependencies":["user-service","notification-service"],"resources":{"cpu":4,"memory":"8GB","disk":"100GB","referenceOf":"service_resources_large"},"config":{"retention_days":365},"referenceOf":"analytics_service_base","replicas":1}},"scaling":{"auto_scaling":{"enabled":true,"min_replicas":1,"max_replicas":10,"target_cpu":80,"target_memory":85,"scale_up_cooldown":300,"scale_down_cooldown":600,"anchor":"auto_scaling_config"}}},"staging_deployment":{"environment":"staging","services":{"user_service":{"name":"user-service","version":"2.1.0","port":8001,"database":"primary","dependencies":["auth-service","notification-service"],"resources":{"cpu":0.5,"memory":"1GB","disk":"10GB","anchor":"service_resources_small"},"health_check":{"path":"/health","interval":30,"timeout":5},"referenceOf":"user_service_base","replicas":1},"auth_service":{"name":"auth-service","version":"1.5.2","port":8002,"database":"primary","dependencies":[],"resources":{"cpu":0.5,"memory":"1GB","disk":"10GB","referenceOf":"service_resources_small"},"config":{"providers":{"0":"google","1":"github","2":"azure_ad","referenceOf":"auth_providers"},"session_timeout":3600,"refresh_token_ttl":604800},"referenceOf":"auth_service_base","replicas":1},"notification_service":{"name":"notification-service","version":"1.2.1","port":8003,"database":"cache","dependencies":["user-service"],"resources":{"cpu":1,"memory":"2GB","disk":"20GB","anchor":"service_resources_medium"},"channels":{"0":{"email":"admin@company.com"},"1":{"slack":"#alerts"},"2":{"webhook":"https://monitoring.company.com/webhook"},"referenceOf":"notification_channels"},"referenceOf":"notification_service_base","replicas":1}},"scaling":{"enabled":true,"min_replicas":1,"max_replicas":3,"target_cpu":80,"target_memory":85,"scale_up_cooldown":300,"scale_down_cooldown":600,"referenceOf":"auto_scaling_config"}}},"testing":{"test_suites":{"unit_tests":{"framework":"jest","coverage_threshold":80,"timeout":10000,"parallel":true,"reporters":["default","coverage","junit"],"anchor":"unit_test_config"},"integration_tests":{"framework":"cypress","coverage_threshold":80,"timeout":30000,"parallel":true,"reporters":["default","coverage","junit"],"referenceOf":"unit_test_config","browser":"chrome","anchor":"integration_test_config"},"load_tests":{"tool":"k6","duration":"300s","virtual_users":100,"thresholds":{"response_time":"500ms","error_rate":"1%"},"anchor":"load_test_config"}},"test_environments":{"ci_pipeline":{"database":{"driver":"postgresql","port":5433,"timeout":30,"pool_size":10,"ssl_mode":"disable","retry_attempts":3,"connection_params":{"charset":"utf8","timezone":"UTC"},"referenceOf":"development_database","host":"dev-db.company.com","database":"dev_app"},"services":[{"user_service":{"name":"user-service","version":"2.1.0","port":8001,"database":"primary","dependencies":["auth-service","notification-service"],"resources":{"cpu":0.5,"memory":"1GB","disk":"10GB","anchor":"service_resources_small"},"health_check":{"path":"/health","interval":30,"timeout":5},"referenceOf":"user_service_base"}},{"auth_service":{"name":"auth-service","version":"1.5.2","port":8002,"database":"primary","dependencies":[],"resources":{"cpu":0.5,"memory":"1GB","disk":"10GB","referenceOf":"service_resources_small"},"config":{"providers":{"0":"google","1":"github","2":"azure_ad","referenceOf":"auth_providers"},"session_timeout":3600,"refresh_token_ttl":604800},"referenceOf":"auth_service_base"}}],"tests":[{"unit":{"framework":"jest","coverage_threshold":80,"timeout":10000,"parallel":true,"reporters":["default","coverage","junit"],"referenceOf":"unit_test_config"}},{"integration":{"framework":"cypress","coverage_threshold":80,"timeout":30000,"parallel":true,"reporters":["default","coverage","junit"],"referenceOf":"integration_test_config","browser":"chrome"}}]},"performance_testing":{"database":{"driver":"postgresql","port":5432,"timeout":30,"pool_size":50,"ssl_mode":"require","retry_attempts":3,"connection_params":{"charset":"utf8","timezone":"UTC"},"referenceOf":"production_database","host":"prod-db.company.com","database":"production_app","backup_enabled":true},"services":[{"user_service":{"name":"user-service","version":"2.1.0","port":8001,"database":"primary","dependencies":["auth-service","notification-service"],"resources":{"cpu":0.5,"memory":"1GB","disk":"10GB","anchor":"service_resources_small"},"health_check":{"path":"/health","interval":30,"timeout":5},"referenceOf":"user_service_base"}},{"auth_service":{"name":"auth-service","version":"1.5.2","port":8002,"database":"primary","dependencies":[],"resources":{"cpu":0.5,"memory":"1GB","disk":"10GB","referenceOf":"service_resources_small"},"config":{"providers":{"0":"google","1":"github","2":"azure_ad","referenceOf":"auth_providers"},"session_timeout":3600,"refresh_token_ttl":604800},"referenceOf":"auth_service_base"}},{"notification_service":{"name":"notification-service","version":"1.2.1","port":8003,"database":"cache","dependencies":["user-service"],"resources":{"cpu":1,"memory":"2GB","disk":"20GB","anchor":"service_resources_medium"},"channels":{"0":{"email":"admin@company.com"},"1":{"slack":"#alerts"},"2":{"webhook":"https://monitoring.company.com/webhook"},"referenceOf":"notification_channels"},"referenceOf":"notification_service_base"}},{"analytics_service":{"name":"analytics-service","version":"3.0.0","port":8004,"database":"primary","dependencies":["user-service","notification-service"],"resources":{"cpu":4,"memory":"8GB","disk":"100GB","anchor":"service_resources_large"},"config":{"retention_days":365},"referenceOf":"analytics_service_base"}}],"tests":[{"load":{"tool":"k6","duration":"300s","virtual_users":100,"thresholds":{"response_time":"500ms","error_rate":"1%"},"referenceOf":"load_test_config"}}]}}},"feature_flags":{"global":{"new_ui_design":{"enabled":false,"rollout_percentage":0,"environments":["development","staging"],"anchor":"new_ui_flag"},"advanced_analytics":{"enabled":true,"rollout_percentage":100,"user_segments":["premium_users","enterprise_users"],"anchor":"analytics_flag"},"experimental_features":{"enabled":false,"rollout_percentage":5,"environments":["development"],"user_segments":["beta_testers"],"anchor":"experimental_flag"},"anchor":"global_features"},"by_environment":{"production":{"features":{"new_ui_design":{"enabled":true,"rollout_percentage":25,"environments":["development","staging"],"referenceOf":"new_ui_flag"},"advanced_analytics":{"enabled":true,"rollout_percentage":100,"user_segments":["premium_users","enterprise_users"],"referenceOf":"analytics_flag"},"experimental_features":{"enabled":false,"rollout_percentage":0,"environments":["development"],"user_segments":["beta_testers"],"referenceOf":"experimental_flag"}}},"staging":{"features":{"new_ui_design":{"enabled":true,"rollout_percentage":100,"environments":["development","staging"],"referenceOf":"new_ui_flag"},"advanced_analytics":{"enabled":true,"rollout_percentage":100,"user_segments":["premium_users","enterprise_users"],"referenceOf":"analytics_flag"},"experimental_features":{"enabled":false,"rollout_percentage":5,"environments":["development"],"user_segments":["beta_testers"],"referenceOf":"experimental_flag"}}},"development":{"features":{"new_ui_design":{"enabled":true,"rollout_percentage":100,"environments":["development","staging"],"referenceOf":"new_ui_flag"},"advanced_analytics":{"enabled":true,"rollout_percentage":100,"user_segments":["premium_users","enterprise_users"],"referenceOf":"analytics_flag"},"experimental_features":{"enabled":false,"rollout_percentage":5,"environments":["development"],"user_segments":["beta_testers"],"referenceOf":"experimental_flag"}}}}},"backup_recovery":{"backup_configs":{"database_backup":{"enabled":true,"frequency":"daily","retention_days":365,"compression":"gzip","encryption":"AES-256-GCM","storage_locations":["s3://company-backups/database/","gs://company-backups-secondary/database/"],"anchor":"db_backup_config"},"application_backup":{"enabled":true,"frequency":"weekly","retention_days":90,"includes":["configuration_files","user_uploads","logs"],"storage_locations":{"0":"s3://company-backups/database/","1":"gs://company-backups-secondary/database/","referenceOf":"backup_storage"},"anchor":"app_backup_config"}},"recovery_procedures":{"database_recovery":{"rto":"4h","rpo":"1h","backup_source":{"enabled":true,"frequency":"daily","retention_days":365,"compression":"gzip","encryption":"AES-256-GCM","storage_locations":["s3://company-backups/database/","gs://company-backups-secondary/database/"],"referenceOf":"db_backup_config"},"automated_testing":"monthly"},"application_recovery":{"rto":"2h","rpo":"24h","backup_source":{"enabled":true,"frequency":"weekly","retention_days":90,"includes":["configuration_files","user_uploads","logs"],"storage_locations":{"0":"s3://company-backups/database/","1":"gs://company-backups-secondary/database/","referenceOf":"backup_storage"},"referenceOf":"app_backup_config"},"automated_testing":"weekly"}}},"compliance":{"regulations":{"gdpr":{"enabled":true,"data_retention":365,"consent_management":true},"hipaa":{"enabled":false,"encryption_required":"AES-256-GCM"},"sox":{"enabled":true,"financial_controls":true,"audit_trail":"INFO"},"anchor":"compliance_regs"},"audit_config":{"authentication":{"method":"oauth2","providers":["google","github","azure_ad"],"session_timeout":3600,"refresh_token_ttl":604800},"encryption":{"algorithm":"AES-256-GCM","key_rotation_days":90},"audit":{"enabled":true,"log_level":"INFO","retention_days":365},"referenceOf":"security_config","compliance_frameworks":{"gdpr":{"enabled":true,"data_retention":365,"consent_management":true},"hipaa":{"enabled":false,"encryption_required":"AES-256-GCM"},"sox":{"enabled":true,"financial_controls":true,"audit_trail":"INFO"},"referenceOf":"compliance_regs"},"reporting":{"frequency":"monthly","recipients":{"0":{"email":"admin@company.com"},"1":{"slack":"#alerts"},"2":{"webhook":"https://monitoring.company.com/webhook"},"referenceOf":"notification_channels"},"formats":["pdf","csv","json"]}}}}
+{
+  "database_configs": {
+    "base_db": {
+      "driver": "postgresql",
+      "port": 5432,
+      "timeout": 30,
+      "pool_size": 10,
+      "ssl_mode": "require",
+      "retry_attempts": 3,
+      "connection_params": { "charset": "utf8", "timezone": "UTC" },
+      "anchor": "base_database"
+    },
+    "prod_db": {
+      "driver": "postgresql",
+      "port": 5432,
+      "timeout": 30,
+      "pool_size": 50,
+      "ssl_mode": "require",
+      "retry_attempts": 3,
+      "connection_params": { "charset": "utf8", "timezone": "UTC" },
+      "referenceOf": "base_database",
+      "host": "prod-db.company.com",
+      "database": "production_app",
+      "backup_enabled": true,
+      "anchor": "production_database"
+    },
+    "dev_db": {
+      "driver": "postgresql",
+      "port": 5433,
+      "timeout": 30,
+      "pool_size": 10,
+      "ssl_mode": "disable",
+      "retry_attempts": 3,
+      "connection_params": { "charset": "utf8", "timezone": "UTC" },
+      "referenceOf": "base_database",
+      "host": "dev-db.company.com",
+      "database": "dev_app",
+      "anchor": "development_database"
+    }
+  },
+  "server_configs": {
+    "base_server": {
+      "protocol": "https",
+      "timeout": 60,
+      "max_connections": 1000,
+      "compression": "gzip",
+      "security": {
+        "cors_enabled": true,
+        "rate_limiting": true,
+        "headers": [
+          { "X-Content-Type-Options": "nosniff" },
+          { "X-Frame-Options": "DENY" },
+          { "X-XSS-Protection": "1; mode=block" }
+        ]
+      },
+      "anchor": "base_server_config"
+    },
+    "load_balancer": {
+      "protocol": "https",
+      "timeout": 60,
+      "max_connections": 1000,
+      "compression": "gzip",
+      "security": {
+        "cors_enabled": true,
+        "rate_limiting": true,
+        "headers": [
+          { "X-Content-Type-Options": "nosniff" },
+          { "X-Frame-Options": "DENY" },
+          { "X-XSS-Protection": "1; mode=block" }
+        ]
+      },
+      "referenceOf": "base_server_config",
+      "algorithm": "round_robin",
+      "health_check": { "enabled": true, "interval": 30, "timeout": 10, "path": "/health" },
+      "anchor": "lb_config"
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "metrics": ["cpu_usage", "memory_usage", "disk_usage", "network_io"],
+    "alerts": { "cpu_threshold": 80, "memory_threshold": 85, "disk_threshold": 90 },
+    "notification_channels": [
+      { "email": "admin@company.com" },
+      { "slack": "#alerts" },
+      { "webhook": "https://monitoring.company.com/webhook" }
+    ],
+    "anchor": "monitoring_base"
+  },
+  "security_base": {
+    "authentication": {
+      "method": "oauth2",
+      "providers": ["google", "github", "azure_ad"],
+      "session_timeout": 3600,
+      "refresh_token_ttl": 604800
+    },
+    "encryption": { "algorithm": "AES-256-GCM", "key_rotation_days": 90 },
+    "audit": { "enabled": true, "log_level": "INFO", "retention_days": 365 },
+    "anchor": "security_config"
+  },
+  "environments": {
+    "production": {
+      "name": "Production Environment",
+      "databases": {
+        "primary": {
+          "driver": "postgresql",
+          "port": 5432,
+          "timeout": 30,
+          "pool_size": 50,
+          "ssl_mode": "require",
+          "retry_attempts": 3,
+          "connection_params": { "charset": "utf8", "timezone": "UTC" },
+          "referenceOf": "production_database",
+          "host": "prod-db.company.com",
+          "database": "production_app",
+          "backup_enabled": true,
+          "credentials": { "username": "PROD_DB_USER", "password": "PROD_DB_PASS" }
+        },
+        "read_replica": {
+          "driver": "postgresql",
+          "port": 5432,
+          "timeout": 30,
+          "pool_size": 50,
+          "ssl_mode": "require",
+          "retry_attempts": 3,
+          "connection_params": { "charset": "utf8", "timezone": "UTC" },
+          "referenceOf": "production_database",
+          "host": "prod-db-replica.company.com",
+          "database": "production_app",
+          "backup_enabled": true,
+          "readonly": true
+        },
+        "cache": {
+          "driver": "redis",
+          "port": 6379,
+          "timeout": 30,
+          "pool_size": 10,
+          "ssl_mode": "require",
+          "retry_attempts": 3,
+          "connection_params": { "charset": "utf8", "timezone": "UTC" },
+          "referenceOf": "base_database",
+          "host": "prod-redis.company.com"
+        }
+      },
+      "servers": {
+        "web_servers": [
+          {
+            "protocol": "https",
+            "timeout": 60,
+            "max_connections": 1000,
+            "compression": "gzip",
+            "security": {
+              "cors_enabled": true,
+              "rate_limiting": true,
+              "headers": [
+                { "X-Content-Type-Options": "nosniff" },
+                { "X-Frame-Options": "DENY" },
+                { "X-XSS-Protection": "1; mode=block" }
+              ]
+            },
+            "referenceOf": "base_server_config",
+            "name": "web-01",
+            "host": "web-01.prod.company.com",
+            "port": 443,
+            "resources": { "cpu": 4, "memory": "8GB", "disk": "100GB" }
+          },
+          {
+            "protocol": "https",
+            "timeout": 60,
+            "max_connections": 1000,
+            "compression": "gzip",
+            "security": {
+              "cors_enabled": true,
+              "rate_limiting": true,
+              "headers": [
+                { "X-Content-Type-Options": "nosniff" },
+                { "X-Frame-Options": "DENY" },
+                { "X-XSS-Protection": "1; mode=block" }
+              ]
+            },
+            "referenceOf": "base_server_config",
+            "name": "web-02",
+            "host": "web-02.prod.company.com",
+            "port": 443,
+            "resources": { "cpu": 4, "memory": "8GB", "disk": "100GB" }
+          },
+          {
+            "protocol": "https",
+            "timeout": 60,
+            "max_connections": 1000,
+            "compression": "gzip",
+            "security": {
+              "cors_enabled": true,
+              "rate_limiting": true,
+              "headers": [
+                { "X-Content-Type-Options": "nosniff" },
+                { "X-Frame-Options": "DENY" },
+                { "X-XSS-Protection": "1; mode=block" }
+              ]
+            },
+            "referenceOf": "base_server_config",
+            "name": "web-03",
+            "host": "web-03.prod.company.com",
+            "port": 443,
+            "resources": { "cpu": 4, "memory": "8GB", "disk": "100GB" }
+          }
+        ],
+        "api_servers": [
+          {
+            "protocol": "https",
+            "timeout": 60,
+            "max_connections": 1000,
+            "compression": "gzip",
+            "security": {
+              "cors_enabled": true,
+              "rate_limiting": true,
+              "headers": [
+                { "X-Content-Type-Options": "nosniff" },
+                { "X-Frame-Options": "DENY" },
+                { "X-XSS-Protection": "1; mode=block" }
+              ]
+            },
+            "referenceOf": "base_server_config",
+            "name": "api-01",
+            "host": "api-01.prod.company.com",
+            "port": 8443,
+            "resources": { "cpu": 8, "memory": "16GB", "disk": "200GB" }
+          },
+          {
+            "protocol": "https",
+            "timeout": 60,
+            "max_connections": 1000,
+            "compression": "gzip",
+            "security": {
+              "cors_enabled": true,
+              "rate_limiting": true,
+              "headers": [
+                { "X-Content-Type-Options": "nosniff" },
+                { "X-Frame-Options": "DENY" },
+                { "X-XSS-Protection": "1; mode=block" }
+              ]
+            },
+            "referenceOf": "base_server_config",
+            "name": "api-02",
+            "host": "api-02.prod.company.com",
+            "port": 8443,
+            "resources": { "cpu": 8, "memory": "16GB", "disk": "200GB" }
+          }
+        ],
+        "load_balancers": [
+          {
+            "protocol": "https",
+            "timeout": 60,
+            "max_connections": 1000,
+            "compression": "gzip",
+            "security": {
+              "cors_enabled": true,
+              "rate_limiting": true,
+              "headers": [
+                { "X-Content-Type-Options": "nosniff" },
+                { "X-Frame-Options": "DENY" },
+                { "X-XSS-Protection": "1; mode=block" }
+              ]
+            },
+            "referenceOf": "lb_config",
+            "algorithm": "round_robin",
+            "health_check": { "enabled": true, "interval": 30, "timeout": 10, "path": "/health" },
+            "name": "lb-main",
+            "host": "lb.prod.company.com",
+            "backend_servers": {
+              "0": {
+                "protocol": "https",
+                "timeout": 60,
+                "max_connections": 1000,
+                "compression": "gzip",
+                "security": {
+                  "cors_enabled": true,
+                  "rate_limiting": true,
+                  "headers": [
+                    { "X-Content-Type-Options": "nosniff" },
+                    { "X-Frame-Options": "DENY" },
+                    { "X-XSS-Protection": "1; mode=block" }
+                  ]
+                },
+                "referenceOf": "base_server_config",
+                "name": "web-01",
+                "host": "web-01.prod.company.com",
+                "port": 443,
+                "resources": { "cpu": 4, "memory": "8GB", "disk": "100GB" }
+              },
+              "1": {
+                "protocol": "https",
+                "timeout": 60,
+                "max_connections": 1000,
+                "compression": "gzip",
+                "security": {
+                  "cors_enabled": true,
+                  "rate_limiting": true,
+                  "headers": [
+                    { "X-Content-Type-Options": "nosniff" },
+                    { "X-Frame-Options": "DENY" },
+                    { "X-XSS-Protection": "1; mode=block" }
+                  ]
+                },
+                "referenceOf": "base_server_config",
+                "name": "web-02",
+                "host": "web-02.prod.company.com",
+                "port": 443,
+                "resources": { "cpu": 4, "memory": "8GB", "disk": "100GB" }
+              },
+              "2": {
+                "protocol": "https",
+                "timeout": 60,
+                "max_connections": 1000,
+                "compression": "gzip",
+                "security": {
+                  "cors_enabled": true,
+                  "rate_limiting": true,
+                  "headers": [
+                    { "X-Content-Type-Options": "nosniff" },
+                    { "X-Frame-Options": "DENY" },
+                    { "X-XSS-Protection": "1; mode=block" }
+                  ]
+                },
+                "referenceOf": "base_server_config",
+                "name": "web-03",
+                "host": "web-03.prod.company.com",
+                "port": 443,
+                "resources": { "cpu": 4, "memory": "8GB", "disk": "100GB" }
+              },
+              "referenceOf": "prod_web_servers"
+            }
+          },
+          {
+            "protocol": "https",
+            "timeout": 60,
+            "max_connections": 1000,
+            "compression": "gzip",
+            "security": {
+              "cors_enabled": true,
+              "rate_limiting": true,
+              "headers": [
+                { "X-Content-Type-Options": "nosniff" },
+                { "X-Frame-Options": "DENY" },
+                { "X-XSS-Protection": "1; mode=block" }
+              ]
+            },
+            "referenceOf": "lb_config",
+            "algorithm": "round_robin",
+            "health_check": { "enabled": true, "interval": 30, "timeout": 10, "path": "/health" },
+            "name": "lb-api",
+            "host": "api-lb.prod.company.com",
+            "backend_servers": {
+              "0": {
+                "protocol": "https",
+                "timeout": 60,
+                "max_connections": 1000,
+                "compression": "gzip",
+                "security": {
+                  "cors_enabled": true,
+                  "rate_limiting": true,
+                  "headers": [
+                    { "X-Content-Type-Options": "nosniff" },
+                    { "X-Frame-Options": "DENY" },
+                    { "X-XSS-Protection": "1; mode=block" }
+                  ]
+                },
+                "referenceOf": "base_server_config",
+                "name": "api-01",
+                "host": "api-01.prod.company.com",
+                "port": 8443,
+                "resources": { "cpu": 8, "memory": "16GB", "disk": "200GB" }
+              },
+              "1": {
+                "protocol": "https",
+                "timeout": 60,
+                "max_connections": 1000,
+                "compression": "gzip",
+                "security": {
+                  "cors_enabled": true,
+                  "rate_limiting": true,
+                  "headers": [
+                    { "X-Content-Type-Options": "nosniff" },
+                    { "X-Frame-Options": "DENY" },
+                    { "X-XSS-Protection": "1; mode=block" }
+                  ]
+                },
+                "referenceOf": "base_server_config",
+                "name": "api-02",
+                "host": "api-02.prod.company.com",
+                "port": 8443,
+                "resources": { "cpu": 8, "memory": "16GB", "disk": "200GB" }
+              },
+              "referenceOf": "prod_api_servers"
+            }
+          }
+        ]
+      },
+      "monitoring": {
+        "enabled": true,
+        "metrics": ["cpu_usage", "memory_usage", "disk_usage", "network_io"],
+        "alerts": {
+          "cpu_threshold": 80,
+          "memory_threshold": 85,
+          "disk_threshold": 90,
+          "custom_thresholds": { "response_time": "500ms", "error_rate": "1%" }
+        },
+        "notification_channels": {
+          "0": { "email": "admin@company.com" },
+          "1": { "slack": "#alerts" },
+          "2": { "webhook": "https://monitoring.company.com/webhook" },
+          "referenceOf": "notification_channels"
+        },
+        "referenceOf": "monitoring_base"
+      },
+      "security": {
+        "authentication": {
+          "method": "oauth2",
+          "providers": ["google", "github", "azure_ad"],
+          "session_timeout": 3600,
+          "refresh_token_ttl": 604800
+        },
+        "encryption": { "algorithm": "AES-256-GCM", "key_rotation_days": 90 },
+        "audit": { "enabled": true, "log_level": "INFO", "retention_days": 365 },
+        "referenceOf": "security_config",
+        "additional_rules": [
+          { "block_tor_exits": true },
+          { "geo_blocking": ["CN", "RU", "KP"] },
+          { "ddos_protection": "enabled" }
+        ]
+      }
+    },
+    "staging": {
+      "name": "Staging Environment",
+      "databases": {
+        "primary": {
+          "driver": "postgresql",
+          "port": 5433,
+          "timeout": 30,
+          "pool_size": 10,
+          "ssl_mode": "disable",
+          "retry_attempts": 3,
+          "connection_params": { "charset": "utf8", "timezone": "UTC" },
+          "referenceOf": "development_database",
+          "host": "staging-db.company.com",
+          "database": "staging_app"
+        },
+        "cache": {
+          "driver": "redis",
+          "port": 6379,
+          "timeout": 30,
+          "pool_size": 10,
+          "ssl_mode": "require",
+          "retry_attempts": 3,
+          "connection_params": { "charset": "utf8", "timezone": "UTC" },
+          "referenceOf": "base_database",
+          "host": "staging-redis.company.com"
+        }
+      },
+      "servers": {
+        "web_servers": [
+          {
+            "protocol": "https",
+            "timeout": 60,
+            "max_connections": 1000,
+            "compression": "gzip",
+            "security": {
+              "cors_enabled": true,
+              "rate_limiting": true,
+              "headers": [
+                { "X-Content-Type-Options": "nosniff" },
+                { "X-Frame-Options": "DENY" },
+                { "X-XSS-Protection": "1; mode=block" }
+              ]
+            },
+            "referenceOf": "base_server_config",
+            "name": "staging-web",
+            "host": "staging-web.company.com",
+            "port": 443,
+            "resources": { "cpu": 2, "memory": "4GB", "disk": "50GB" }
+          }
+        ],
+        "api_servers": [
+          {
+            "protocol": "https",
+            "timeout": 60,
+            "max_connections": 1000,
+            "compression": "gzip",
+            "security": {
+              "cors_enabled": true,
+              "rate_limiting": true,
+              "headers": [
+                { "X-Content-Type-Options": "nosniff" },
+                { "X-Frame-Options": "DENY" },
+                { "X-XSS-Protection": "1; mode=block" }
+              ]
+            },
+            "referenceOf": "base_server_config",
+            "name": "staging-api",
+            "host": "staging-api.company.com",
+            "port": 8443,
+            "resources": { "cpu": 4, "memory": "8GB", "disk": "100GB" }
+          }
+        ]
+      },
+      "monitoring": {
+        "enabled": true,
+        "metrics": ["cpu_usage", "memory_usage", "disk_usage", "network_io"],
+        "alerts": { "cpu_threshold": 90, "memory_threshold": 90, "disk_threshold": 95 },
+        "notification_channels": [
+          { "email": "dev-team@company.com" },
+          { "slack": "#staging-alerts" }
+        ],
+        "referenceOf": "monitoring_base"
+      },
+      "security": {
+        "authentication": { "method": "basic_auth", "session_timeout": 3600 },
+        "encryption": { "algorithm": "AES-256-GCM", "key_rotation_days": 90 },
+        "audit": { "enabled": true, "log_level": "INFO", "retention_days": 365 },
+        "referenceOf": "security_config"
+      }
+    },
+    "development": {
+      "name": "Development Environment",
+      "databases": {
+        "primary": {
+          "driver": "postgresql",
+          "port": 5433,
+          "timeout": 30,
+          "pool_size": 10,
+          "ssl_mode": "disable",
+          "retry_attempts": 3,
+          "connection_params": { "charset": "utf8", "timezone": "UTC" },
+          "referenceOf": "development_database",
+          "host": "dev-db.company.com",
+          "database": "dev_app"
+        }
+      },
+      "servers": {
+        "web_servers": [
+          {
+            "protocol": "http",
+            "timeout": 60,
+            "max_connections": 1000,
+            "compression": "gzip",
+            "security": {
+              "cors_enabled": true,
+              "rate_limiting": true,
+              "headers": [
+                { "X-Content-Type-Options": "nosniff" },
+                { "X-Frame-Options": "DENY" },
+                { "X-XSS-Protection": "1; mode=block" }
+              ]
+            },
+            "referenceOf": "base_server_config",
+            "name": "dev-web",
+            "host": "localhost",
+            "port": 3000,
+            "resources": { "cpu": 1, "memory": "2GB", "disk": "20GB" }
+          }
+        ]
+      },
+      "monitoring": { "enabled": false },
+      "security": {
+        "authentication": { "method": "none" },
+        "encryption": { "algorithm": "AES-256-GCM", "key_rotation_days": 30 },
+        "audit": { "enabled": false }
+      }
+    }
+  },
+  "services": {
+    "microservices": {
+      "user_service": {
+        "name": "user-service",
+        "version": "2.1.0",
+        "port": 8001,
+        "database": "primary",
+        "dependencies": ["auth-service", "notification-service"],
+        "resources": {
+          "cpu": 0.5,
+          "memory": "1GB",
+          "disk": "10GB",
+          "anchor": "service_resources_small"
+        },
+        "health_check": { "path": "/health", "interval": 30, "timeout": 5 },
+        "anchor": "user_service_base"
+      },
+      "auth_service": {
+        "name": "auth-service",
+        "version": "1.5.2",
+        "port": 8002,
+        "database": "primary",
+        "dependencies": [],
+        "resources": {
+          "cpu": 0.5,
+          "memory": "1GB",
+          "disk": "10GB",
+          "referenceOf": "service_resources_small"
+        },
+        "config": {
+          "providers": {
+            "0": "google",
+            "1": "github",
+            "2": "azure_ad",
+            "referenceOf": "auth_providers"
+          },
+          "session_timeout": 3600,
+          "refresh_token_ttl": 604800
+        },
+        "anchor": "auth_service_base"
+      },
+      "notification_service": {
+        "name": "notification-service",
+        "version": "1.2.1",
+        "port": 8003,
+        "database": "cache",
+        "dependencies": ["user-service"],
+        "resources": {
+          "cpu": 1,
+          "memory": "2GB",
+          "disk": "20GB",
+          "anchor": "service_resources_medium"
+        },
+        "channels": {
+          "0": { "email": "admin@company.com" },
+          "1": { "slack": "#alerts" },
+          "2": { "webhook": "https://monitoring.company.com/webhook" },
+          "referenceOf": "notification_channels"
+        },
+        "anchor": "notification_service_base"
+      },
+      "analytics_service": {
+        "name": "analytics-service",
+        "version": "3.0.0",
+        "port": 8004,
+        "database": "primary",
+        "dependencies": ["user-service", "notification-service"],
+        "resources": {
+          "cpu": 4,
+          "memory": "8GB",
+          "disk": "100GB",
+          "anchor": "service_resources_large"
+        },
+        "config": { "retention_days": 365 },
+        "anchor": "analytics_service_base"
+      }
+    }
+  },
+  "deployments": {
+    "production_deployment": {
+      "environment": "production",
+      "services": {
+        "user_service": {
+          "name": "user-service",
+          "version": "2.1.0",
+          "port": 8001,
+          "database": "primary",
+          "dependencies": ["auth-service", "notification-service"],
+          "resources": {
+            "cpu": 1,
+            "memory": "2GB",
+            "disk": "20GB",
+            "referenceOf": "service_resources_medium"
+          },
+          "health_check": { "path": "/health", "interval": 30, "timeout": 5 },
+          "referenceOf": "user_service_base",
+          "replicas": 3,
+          "environment_variables": {
+            "DB_HOST": "environments.production.databases.primary.host",
+            "DB_NAME": "environments.production.databases.primary.database"
+          }
+        },
+        "auth_service": {
+          "name": "auth-service",
+          "version": "1.5.2",
+          "port": 8002,
+          "database": "primary",
+          "dependencies": [],
+          "resources": {
+            "cpu": 0.5,
+            "memory": "1GB",
+            "disk": "10GB",
+            "referenceOf": "service_resources_small"
+          },
+          "config": {
+            "providers": {
+              "0": "google",
+              "1": "github",
+              "2": "azure_ad",
+              "referenceOf": "auth_providers"
+            },
+            "session_timeout": 3600,
+            "refresh_token_ttl": 604800
+          },
+          "referenceOf": "auth_service_base",
+          "replicas": 2
+        },
+        "notification_service": {
+          "name": "notification-service",
+          "version": "1.2.1",
+          "port": 8003,
+          "database": "cache",
+          "dependencies": ["user-service"],
+          "resources": {
+            "cpu": 1,
+            "memory": "2GB",
+            "disk": "20GB",
+            "referenceOf": "service_resources_medium"
+          },
+          "channels": {
+            "0": { "email": "admin@company.com" },
+            "1": { "slack": "#alerts" },
+            "2": { "webhook": "https://monitoring.company.com/webhook" },
+            "referenceOf": "notification_channels"
+          },
+          "referenceOf": "notification_service_base",
+          "replicas": 2
+        },
+        "analytics_service": {
+          "name": "analytics-service",
+          "version": "3.0.0",
+          "port": 8004,
+          "database": "primary",
+          "dependencies": ["user-service", "notification-service"],
+          "resources": {
+            "cpu": 4,
+            "memory": "8GB",
+            "disk": "100GB",
+            "referenceOf": "service_resources_large"
+          },
+          "config": { "retention_days": 365 },
+          "referenceOf": "analytics_service_base",
+          "replicas": 1
+        }
+      },
+      "scaling": {
+        "auto_scaling": {
+          "enabled": true,
+          "min_replicas": 1,
+          "max_replicas": 10,
+          "target_cpu": 80,
+          "target_memory": 85,
+          "scale_up_cooldown": 300,
+          "scale_down_cooldown": 600,
+          "anchor": "auto_scaling_config"
+        }
+      }
+    },
+    "staging_deployment": {
+      "environment": "staging",
+      "services": {
+        "user_service": {
+          "name": "user-service",
+          "version": "2.1.0",
+          "port": 8001,
+          "database": "primary",
+          "dependencies": ["auth-service", "notification-service"],
+          "resources": {
+            "cpu": 0.5,
+            "memory": "1GB",
+            "disk": "10GB",
+            "anchor": "service_resources_small"
+          },
+          "health_check": { "path": "/health", "interval": 30, "timeout": 5 },
+          "referenceOf": "user_service_base",
+          "replicas": 1
+        },
+        "auth_service": {
+          "name": "auth-service",
+          "version": "1.5.2",
+          "port": 8002,
+          "database": "primary",
+          "dependencies": [],
+          "resources": {
+            "cpu": 0.5,
+            "memory": "1GB",
+            "disk": "10GB",
+            "referenceOf": "service_resources_small"
+          },
+          "config": {
+            "providers": {
+              "0": "google",
+              "1": "github",
+              "2": "azure_ad",
+              "referenceOf": "auth_providers"
+            },
+            "session_timeout": 3600,
+            "refresh_token_ttl": 604800
+          },
+          "referenceOf": "auth_service_base",
+          "replicas": 1
+        },
+        "notification_service": {
+          "name": "notification-service",
+          "version": "1.2.1",
+          "port": 8003,
+          "database": "cache",
+          "dependencies": ["user-service"],
+          "resources": {
+            "cpu": 1,
+            "memory": "2GB",
+            "disk": "20GB",
+            "anchor": "service_resources_medium"
+          },
+          "channels": {
+            "0": { "email": "admin@company.com" },
+            "1": { "slack": "#alerts" },
+            "2": { "webhook": "https://monitoring.company.com/webhook" },
+            "referenceOf": "notification_channels"
+          },
+          "referenceOf": "notification_service_base",
+          "replicas": 1
+        }
+      },
+      "scaling": {
+        "enabled": true,
+        "min_replicas": 1,
+        "max_replicas": 3,
+        "target_cpu": 80,
+        "target_memory": 85,
+        "scale_up_cooldown": 300,
+        "scale_down_cooldown": 600,
+        "referenceOf": "auto_scaling_config"
+      }
+    }
+  },
+  "testing": {
+    "test_suites": {
+      "unit_tests": {
+        "framework": "jest",
+        "coverage_threshold": 80,
+        "timeout": 10000,
+        "parallel": true,
+        "reporters": ["default", "coverage", "junit"],
+        "anchor": "unit_test_config"
+      },
+      "integration_tests": {
+        "framework": "cypress",
+        "coverage_threshold": 80,
+        "timeout": 30000,
+        "parallel": true,
+        "reporters": ["default", "coverage", "junit"],
+        "referenceOf": "unit_test_config",
+        "browser": "chrome",
+        "anchor": "integration_test_config"
+      },
+      "load_tests": {
+        "tool": "k6",
+        "duration": "300s",
+        "virtual_users": 100,
+        "thresholds": { "response_time": "500ms", "error_rate": "1%" },
+        "anchor": "load_test_config"
+      }
+    },
+    "test_environments": {
+      "ci_pipeline": {
+        "database": {
+          "driver": "postgresql",
+          "port": 5433,
+          "timeout": 30,
+          "pool_size": 10,
+          "ssl_mode": "disable",
+          "retry_attempts": 3,
+          "connection_params": { "charset": "utf8", "timezone": "UTC" },
+          "referenceOf": "development_database",
+          "host": "dev-db.company.com",
+          "database": "dev_app"
+        },
+        "services": [
+          {
+            "user_service": {
+              "name": "user-service",
+              "version": "2.1.0",
+              "port": 8001,
+              "database": "primary",
+              "dependencies": ["auth-service", "notification-service"],
+              "resources": {
+                "cpu": 0.5,
+                "memory": "1GB",
+                "disk": "10GB",
+                "anchor": "service_resources_small"
+              },
+              "health_check": { "path": "/health", "interval": 30, "timeout": 5 },
+              "referenceOf": "user_service_base"
+            }
+          },
+          {
+            "auth_service": {
+              "name": "auth-service",
+              "version": "1.5.2",
+              "port": 8002,
+              "database": "primary",
+              "dependencies": [],
+              "resources": {
+                "cpu": 0.5,
+                "memory": "1GB",
+                "disk": "10GB",
+                "referenceOf": "service_resources_small"
+              },
+              "config": {
+                "providers": {
+                  "0": "google",
+                  "1": "github",
+                  "2": "azure_ad",
+                  "referenceOf": "auth_providers"
+                },
+                "session_timeout": 3600,
+                "refresh_token_ttl": 604800
+              },
+              "referenceOf": "auth_service_base"
+            }
+          }
+        ],
+        "tests": [
+          {
+            "unit": {
+              "framework": "jest",
+              "coverage_threshold": 80,
+              "timeout": 10000,
+              "parallel": true,
+              "reporters": ["default", "coverage", "junit"],
+              "referenceOf": "unit_test_config"
+            }
+          },
+          {
+            "integration": {
+              "framework": "cypress",
+              "coverage_threshold": 80,
+              "timeout": 30000,
+              "parallel": true,
+              "reporters": ["default", "coverage", "junit"],
+              "referenceOf": "integration_test_config",
+              "browser": "chrome"
+            }
+          }
+        ]
+      },
+      "performance_testing": {
+        "database": {
+          "driver": "postgresql",
+          "port": 5432,
+          "timeout": 30,
+          "pool_size": 50,
+          "ssl_mode": "require",
+          "retry_attempts": 3,
+          "connection_params": { "charset": "utf8", "timezone": "UTC" },
+          "referenceOf": "production_database",
+          "host": "prod-db.company.com",
+          "database": "production_app",
+          "backup_enabled": true
+        },
+        "services": [
+          {
+            "user_service": {
+              "name": "user-service",
+              "version": "2.1.0",
+              "port": 8001,
+              "database": "primary",
+              "dependencies": ["auth-service", "notification-service"],
+              "resources": {
+                "cpu": 0.5,
+                "memory": "1GB",
+                "disk": "10GB",
+                "anchor": "service_resources_small"
+              },
+              "health_check": { "path": "/health", "interval": 30, "timeout": 5 },
+              "referenceOf": "user_service_base"
+            }
+          },
+          {
+            "auth_service": {
+              "name": "auth-service",
+              "version": "1.5.2",
+              "port": 8002,
+              "database": "primary",
+              "dependencies": [],
+              "resources": {
+                "cpu": 0.5,
+                "memory": "1GB",
+                "disk": "10GB",
+                "referenceOf": "service_resources_small"
+              },
+              "config": {
+                "providers": {
+                  "0": "google",
+                  "1": "github",
+                  "2": "azure_ad",
+                  "referenceOf": "auth_providers"
+                },
+                "session_timeout": 3600,
+                "refresh_token_ttl": 604800
+              },
+              "referenceOf": "auth_service_base"
+            }
+          },
+          {
+            "notification_service": {
+              "name": "notification-service",
+              "version": "1.2.1",
+              "port": 8003,
+              "database": "cache",
+              "dependencies": ["user-service"],
+              "resources": {
+                "cpu": 1,
+                "memory": "2GB",
+                "disk": "20GB",
+                "anchor": "service_resources_medium"
+              },
+              "channels": {
+                "0": { "email": "admin@company.com" },
+                "1": { "slack": "#alerts" },
+                "2": { "webhook": "https://monitoring.company.com/webhook" },
+                "referenceOf": "notification_channels"
+              },
+              "referenceOf": "notification_service_base"
+            }
+          },
+          {
+            "analytics_service": {
+              "name": "analytics-service",
+              "version": "3.0.0",
+              "port": 8004,
+              "database": "primary",
+              "dependencies": ["user-service", "notification-service"],
+              "resources": {
+                "cpu": 4,
+                "memory": "8GB",
+                "disk": "100GB",
+                "anchor": "service_resources_large"
+              },
+              "config": { "retention_days": 365 },
+              "referenceOf": "analytics_service_base"
+            }
+          }
+        ],
+        "tests": [
+          {
+            "load": {
+              "tool": "k6",
+              "duration": "300s",
+              "virtual_users": 100,
+              "thresholds": { "response_time": "500ms", "error_rate": "1%" },
+              "referenceOf": "load_test_config"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "feature_flags": {
+    "global": {
+      "new_ui_design": {
+        "enabled": false,
+        "rollout_percentage": 0,
+        "environments": ["development", "staging"],
+        "anchor": "new_ui_flag"
+      },
+      "advanced_analytics": {
+        "enabled": true,
+        "rollout_percentage": 100,
+        "user_segments": ["premium_users", "enterprise_users"],
+        "anchor": "analytics_flag"
+      },
+      "experimental_features": {
+        "enabled": false,
+        "rollout_percentage": 5,
+        "environments": ["development"],
+        "user_segments": ["beta_testers"],
+        "anchor": "experimental_flag"
+      },
+      "anchor": "global_features"
+    },
+    "by_environment": {
+      "production": {
+        "features": {
+          "new_ui_design": {
+            "enabled": true,
+            "rollout_percentage": 25,
+            "environments": ["development", "staging"],
+            "referenceOf": "new_ui_flag"
+          },
+          "advanced_analytics": {
+            "enabled": true,
+            "rollout_percentage": 100,
+            "user_segments": ["premium_users", "enterprise_users"],
+            "referenceOf": "analytics_flag"
+          },
+          "experimental_features": {
+            "enabled": false,
+            "rollout_percentage": 0,
+            "environments": ["development"],
+            "user_segments": ["beta_testers"],
+            "referenceOf": "experimental_flag"
+          }
+        }
+      },
+      "staging": {
+        "features": {
+          "new_ui_design": {
+            "enabled": true,
+            "rollout_percentage": 100,
+            "environments": ["development", "staging"],
+            "referenceOf": "new_ui_flag"
+          },
+          "advanced_analytics": {
+            "enabled": true,
+            "rollout_percentage": 100,
+            "user_segments": ["premium_users", "enterprise_users"],
+            "referenceOf": "analytics_flag"
+          },
+          "experimental_features": {
+            "enabled": false,
+            "rollout_percentage": 5,
+            "environments": ["development"],
+            "user_segments": ["beta_testers"],
+            "referenceOf": "experimental_flag"
+          }
+        }
+      },
+      "development": {
+        "features": {
+          "new_ui_design": {
+            "enabled": true,
+            "rollout_percentage": 100,
+            "environments": ["development", "staging"],
+            "referenceOf": "new_ui_flag"
+          },
+          "advanced_analytics": {
+            "enabled": true,
+            "rollout_percentage": 100,
+            "user_segments": ["premium_users", "enterprise_users"],
+            "referenceOf": "analytics_flag"
+          },
+          "experimental_features": {
+            "enabled": false,
+            "rollout_percentage": 5,
+            "environments": ["development"],
+            "user_segments": ["beta_testers"],
+            "referenceOf": "experimental_flag"
+          }
+        }
+      }
+    }
+  },
+  "backup_recovery": {
+    "backup_configs": {
+      "database_backup": {
+        "enabled": true,
+        "frequency": "daily",
+        "retention_days": 365,
+        "compression": "gzip",
+        "encryption": "AES-256-GCM",
+        "storage_locations": [
+          "s3://company-backups/database/",
+          "gs://company-backups-secondary/database/"
+        ],
+        "anchor": "db_backup_config"
+      },
+      "application_backup": {
+        "enabled": true,
+        "frequency": "weekly",
+        "retention_days": 90,
+        "includes": ["configuration_files", "user_uploads", "logs"],
+        "storage_locations": {
+          "0": "s3://company-backups/database/",
+          "1": "gs://company-backups-secondary/database/",
+          "referenceOf": "backup_storage"
+        },
+        "anchor": "app_backup_config"
+      }
+    },
+    "recovery_procedures": {
+      "database_recovery": {
+        "rto": "4h",
+        "rpo": "1h",
+        "backup_source": {
+          "enabled": true,
+          "frequency": "daily",
+          "retention_days": 365,
+          "compression": "gzip",
+          "encryption": "AES-256-GCM",
+          "storage_locations": [
+            "s3://company-backups/database/",
+            "gs://company-backups-secondary/database/"
+          ],
+          "referenceOf": "db_backup_config"
+        },
+        "automated_testing": "monthly"
+      },
+      "application_recovery": {
+        "rto": "2h",
+        "rpo": "24h",
+        "backup_source": {
+          "enabled": true,
+          "frequency": "weekly",
+          "retention_days": 90,
+          "includes": ["configuration_files", "user_uploads", "logs"],
+          "storage_locations": {
+            "0": "s3://company-backups/database/",
+            "1": "gs://company-backups-secondary/database/",
+            "referenceOf": "backup_storage"
+          },
+          "referenceOf": "app_backup_config"
+        },
+        "automated_testing": "weekly"
+      }
+    }
+  },
+  "compliance": {
+    "regulations": {
+      "gdpr": { "enabled": true, "data_retention": 365, "consent_management": true },
+      "hipaa": { "enabled": false, "encryption_required": "AES-256-GCM" },
+      "sox": { "enabled": true, "financial_controls": true, "audit_trail": "INFO" },
+      "anchor": "compliance_regs"
+    },
+    "audit_config": {
+      "authentication": {
+        "method": "oauth2",
+        "providers": ["google", "github", "azure_ad"],
+        "session_timeout": 3600,
+        "refresh_token_ttl": 604800
+      },
+      "encryption": { "algorithm": "AES-256-GCM", "key_rotation_days": 90 },
+      "audit": { "enabled": true, "log_level": "INFO", "retention_days": 365 },
+      "referenceOf": "security_config",
+      "compliance_frameworks": {
+        "gdpr": { "enabled": true, "data_retention": 365, "consent_management": true },
+        "hipaa": { "enabled": false, "encryption_required": "AES-256-GCM" },
+        "sox": { "enabled": true, "financial_controls": true, "audit_trail": "INFO" },
+        "referenceOf": "compliance_regs"
+      },
+      "reporting": {
+        "frequency": "monthly",
+        "recipients": {
+          "0": { "email": "admin@company.com" },
+          "1": { "slack": "#alerts" },
+          "2": { "webhook": "https://monitoring.company.com/webhook" },
+          "referenceOf": "notification_channels"
+        },
+        "formats": ["pdf", "csv", "json"]
+      }
+    }
+  }
+}

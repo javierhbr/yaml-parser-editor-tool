@@ -8,7 +8,7 @@ export default function App() {
     <Layout>
       {{
         yamlAnchorEditor: <YAMLAnchorEditor />,
-        uiYamlEditor: <UIYamlEditor />
+        uiYamlEditor: <UIYamlEditor />,
       }}
     </Layout>
   );

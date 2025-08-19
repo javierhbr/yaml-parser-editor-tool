@@ -31,7 +31,12 @@ export function buildJsonWithMetadata(node: any, doc: Document): any {
 
     // Check for merge keys (e.g., <<: *anchor).
     for (const item of node.items) {
-      if (item instanceof Pair && item.key instanceof Scalar && item.key.value === '<<' && item.value instanceof Alias) {
+      if (
+        item instanceof Pair &&
+        item.key instanceof Scalar &&
+        item.key.value === '<<' &&
+        item.value instanceof Alias
+      ) {
         const alias = item.value;
         const anchorNode = alias.resolve(doc); // Find the original anchored node.
         if (!anchorNode) {
@@ -75,29 +80,29 @@ export function buildJsonWithMetadata(node: any, doc: Document): any {
 
   // Handle ALIAS nodes that are not part of a merge key (less common).
   if (node instanceof Alias) {
-      const anchorNode = node.resolve(doc);
-      if (!anchorNode) {
-        throw new Error(`Undefined anchor reference: ${node.source}`);
-      }
-      let anchorJson = buildJsonWithMetadata(anchorNode, doc);
-      
-      // If the resolved value is a primitive (string, number, boolean), 
-      // return it directly with referenceOf metadata only if it's an object
-      if (typeof anchorJson !== 'object' || anchorJson === null) {
-        // For primitives, we might want to return just the value
-        // But since we need to preserve referenceOf information, 
-        // we'll create an object only if specifically requested
-        return anchorJson;
-      }
-      
-      // For objects, remove the anchor property from the direct alias reference
-      if ('anchor' in anchorJson) {
-        anchorJson = { ...anchorJson };
-        delete anchorJson.anchor;
-      }
-      
-      // For a direct alias to an object, add the referenceOf property
-      return { ...anchorJson, referenceOf: node.source };
+    const anchorNode = node.resolve(doc);
+    if (!anchorNode) {
+      throw new Error(`Undefined anchor reference: ${node.source}`);
+    }
+    let anchorJson = buildJsonWithMetadata(anchorNode, doc);
+
+    // If the resolved value is a primitive (string, number, boolean),
+    // return it directly with referenceOf metadata only if it's an object
+    if (typeof anchorJson !== 'object' || anchorJson === null) {
+      // For primitives, we might want to return just the value
+      // But since we need to preserve referenceOf information,
+      // we'll create an object only if specifically requested
+      return anchorJson;
+    }
+
+    // For objects, remove the anchor property from the direct alias reference
+    if ('anchor' in anchorJson) {
+      anchorJson = { ...anchorJson };
+      delete anchorJson.anchor;
+    }
+
+    // For a direct alias to an object, add the referenceOf property
+    return { ...anchorJson, referenceOf: node.source };
   }
 
   return node;
@@ -114,18 +119,18 @@ export function buildJsonWithMetadata(node: any, doc: Document): any {
 export function parseYamlString(yamlContent: string): any {
   // Parse the YAML into a document
   const doc = YAML.parseDocument(yamlContent);
-  
+
   // Check for parsing errors
   if (doc.errors && doc.errors.length > 0) {
-    throw new Error(`YAML parsing errors: ${doc.errors.map(e => e.message).join(', ')}`);
+    throw new Error(`YAML parsing errors: ${doc.errors.map((e) => e.message).join(', ')}`);
   }
-  
+
   // Build and return the JSON with metadata
   let finalJson = {};
   if (doc.contents) {
     finalJson = buildJsonWithMetadata(doc.contents, doc);
   }
-  
+
   return finalJson;
 }
 

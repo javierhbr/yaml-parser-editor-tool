@@ -9,7 +9,7 @@ interface CreateAnchorModalProps {
 const CreateAnchorModal: React.FC<CreateAnchorModalProps> = ({
   creatingAnchor,
   onCreate,
-  onClose
+  onClose,
 }) => {
   const [anchorName, setAnchorName] = useState('');
 

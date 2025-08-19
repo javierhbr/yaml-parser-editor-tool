@@ -3,11 +3,7 @@ import { parseYamlString } from './yaml-parser';
 import path from 'path';
 import fs from 'fs';
 
-
 describe('YAML Generator', () => {
-
-
-
   describe('test yaml files', () => {
     test('simple json to yaml', () => {
       const jsonPath = path.join(__dirname, 'json-yaml-expected.json');
@@ -44,8 +40,8 @@ describe('YAML Generator', () => {
         active: true,
         address: {
           street: '123 Main St',
-          city: 'Anytown'
-        }
+          city: 'Anytown',
+        },
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -64,9 +60,9 @@ describe('YAML Generator', () => {
           user_profile: {
             role: 'guest',
             timezone: 'UTC',
-            anchor: 'default-user'
-          }
-        }
+            anchor: 'default-user',
+          },
+        },
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -81,12 +77,12 @@ describe('YAML Generator', () => {
       const jsonInput = {
         original: {
           key: 'value',
-          anchor: 'myanchor'
+          anchor: 'myanchor',
         },
         reference: {
           key: 'value',
-          referenceOf: 'myanchor'
-        }
+          referenceOf: 'myanchor',
+        },
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -102,17 +98,17 @@ describe('YAML Generator', () => {
           user: {
             role: 'guest',
             active: true,
-            anchor: 'default-user'
-          }
+            anchor: 'default-user',
+          },
         },
         users: [
           {
             role: 'guest',
             active: true,
             referenceOf: 'default-user',
-            username: 'charlie'
-          }
-        ]
+            username: 'charlie',
+          },
+        ],
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -128,8 +124,8 @@ describe('YAML Generator', () => {
           database: {
             host: 'localhost',
             port: 5432,
-            anchor: 'db-config'
-          }
+            anchor: 'db-config',
+          },
         },
         environments: {
           development: {
@@ -137,10 +133,10 @@ describe('YAML Generator', () => {
               host: 'localhost',
               port: 5432,
               referenceOf: 'db-config',
-              database_name: 'dev_db'
-            }
-          }
-        }
+              database_name: 'dev_db',
+            },
+          },
+        },
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -155,20 +151,20 @@ describe('YAML Generator', () => {
         base_config: {
           name: 'base',
           value: 100,
-          anchor: 'base'
+          anchor: 'base',
         },
         items: [
           {
             name: 'base',
             value: 100,
             referenceOf: 'base',
-            id: 1
+            id: 1,
           },
           {
             name: 'item2',
-            value: 200
-          }
-        ]
+            value: 200,
+          },
+        ],
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -186,8 +182,8 @@ describe('YAML Generator', () => {
           encryption: {
             algorithm: 'AES-256-GCM',
             key_size: 256,
-            anchor: 'encryption-config'
-          }
+            anchor: 'encryption-config',
+          },
         },
         services: {
           web_service: {
@@ -196,11 +192,11 @@ describe('YAML Generator', () => {
                 algorithm: 'AES-256-GCM',
                 key_size: 256,
                 referenceOf: 'encryption-config',
-                enabled: true
-              }
-            }
-          }
-        }
+                enabled: true,
+              },
+            },
+          },
+        },
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -217,8 +213,8 @@ describe('YAML Generator', () => {
         emptyString: '',
         config: {
           setting: null,
-          anchor: 'config'
-        }
+          anchor: 'config',
+        },
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -237,7 +233,7 @@ describe('YAML Generator', () => {
         count: 42,
         price: 19.99,
         negative: -10,
-        scientific: 1.2e3
+        scientific: 1.2e3,
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -256,7 +252,7 @@ describe('YAML Generator', () => {
         stringWithColon: 'key: value',
         numberString: '123',
         booleanString: 'true',
-        nullString: 'null'
+        nullString: 'null',
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -274,8 +270,8 @@ describe('YAML Generator', () => {
         emptyObject: {},
         nestedEmpty: {
           array: [],
-          object: {}
-        }
+          object: {},
+        },
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -291,27 +287,27 @@ describe('YAML Generator', () => {
           level2: {
             level3: {
               value: 'deep',
-              anchor: 'deep-config'
-            }
-          }
+              anchor: 'deep-config',
+            },
+          },
         },
         reference: {
           level3: {
             value: 'deep',
             referenceOf: 'deep-config',
-            extra: 'data'
-          }
-        }
+            extra: 'data',
+          },
+        },
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
       const lines = result.split('\n');
 
       // Check indentation levels
-      expect(lines.some(line => line.startsWith('level1:'))).toBe(true);
-      expect(lines.some(line => line.startsWith('  level2:'))).toBe(true);
-      expect(lines.some(line => line.startsWith('    level3: &deep-config'))).toBe(true);
-      expect(lines.some(line => line.startsWith('      value: deep'))).toBe(true);
+      expect(lines.some((line) => line.startsWith('level1:'))).toBe(true);
+      expect(lines.some((line) => line.startsWith('  level2:'))).toBe(true);
+      expect(lines.some((line) => line.startsWith('    level3: &deep-config'))).toBe(true);
+      expect(lines.some((line) => line.startsWith('      value: deep'))).toBe(true);
     });
 
     test('should generate valid YAML that can be parsed back', () => {
@@ -322,10 +318,10 @@ describe('YAML Generator', () => {
             timezone: 'UTC',
             notifications: {
               email: true,
-              sms: false
+              sms: false,
             },
-            anchor: 'default-user'
-          }
+            anchor: 'default-user',
+          },
         },
         users: [
           {
@@ -333,23 +329,23 @@ describe('YAML Generator', () => {
             timezone: 'UTC',
             notifications: {
               email: true,
-              sms: false
+              sms: false,
             },
             referenceOf: 'default-user',
-            username: 'alice'
+            username: 'alice',
           },
           {
             role: 'admin',
             timezone: 'UTC',
             notifications: {
               email: true,
-              sms: true
+              sms: true,
             },
             referenceOf: 'default-user',
             username: 'bob',
-            department: 'IT'
-          }
-        ]
+            department: 'IT',
+          },
+        ],
       };
 
       const generatedYaml = generateYamlFromJsonWithMetadata(jsonInput);
@@ -373,7 +369,7 @@ describe('YAML Generator', () => {
 
     test('should include header comment', () => {
       const jsonInput = {
-        simple: 'value'
+        simple: 'value',
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -385,22 +381,22 @@ describe('YAML Generator', () => {
       const jsonInput = {
         config1: {
           setting1: 'value1',
-          anchor: 'config-one'
+          anchor: 'config-one',
         },
         config2: {
           setting2: 'value2',
-          anchor: 'config-two'
+          anchor: 'config-two',
         },
         usage: {
           first: {
             setting1: 'value1',
-            referenceOf: 'config-one'
+            referenceOf: 'config-one',
           },
           second: {
             setting2: 'value2',
-            referenceOf: 'config-two'
-          }
-        }
+            referenceOf: 'config-two',
+          },
+        },
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);
@@ -417,20 +413,20 @@ describe('YAML Generator', () => {
           basic: {
             name: 'basic',
             type: 'template',
-            anchor: 'basic-template'
+            anchor: 'basic-template',
           },
           advanced: {
             name: 'advanced',
             type: 'template',
-            anchor: 'advanced-template'
-          }
+            anchor: 'advanced-template',
+          },
         },
         instances: [
           {
             name: 'basic',
             type: 'template',
             referenceOf: 'basic-template',
-            id: 'instance-1'
+            id: 'instance-1',
           },
           {
             name: 'advanced',
@@ -438,15 +434,15 @@ describe('YAML Generator', () => {
             referenceOf: 'advanced-template',
             id: 'instance-2',
             extra_config: {
-              debug: true
-            }
+              debug: true,
+            },
           },
           {
             name: 'custom',
             type: 'custom',
-            id: 'instance-3'
-          }
-        ]
+            id: 'instance-3',
+          },
+        ],
       };
 
       const result = generateYamlFromJsonWithMetadata(jsonInput);

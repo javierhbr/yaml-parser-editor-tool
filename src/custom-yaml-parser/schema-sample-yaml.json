@@ -67,9 +67,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "allOf": [
-          { "$ref": "#/definitions/user_profile" }
-        ],
+        "allOf": [{ "$ref": "#/definitions/user_profile" }],
         "properties": {
           "username": {
             "type": "string",
@@ -92,7 +90,7 @@
           "type": "object",
           "properties": {
             "database": {
-              "allOf": [ { "$ref": "#/definitions/database_connection" } ],
+              "allOf": [{ "$ref": "#/definitions/database_connection" }],
               "properties": {
                 "database_name": {
                   "type": "string",
@@ -108,7 +106,7 @@
           "type": "object",
           "properties": {
             "database": {
-              "allOf": [ { "$ref": "#/definitions/database_connection" } ],
+              "allOf": [{ "$ref": "#/definitions/database_connection" }],
               "properties": {
                 "database_name": {
                   "type": "string",

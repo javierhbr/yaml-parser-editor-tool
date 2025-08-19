@@ -22,10 +22,14 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   showMetadata,
   onToggle,
   onEditReference,
-  onCreateAnchor
+  onCreateAnchor,
 }) => {
   const isExpanded = expandedNodes.has(path);
-  const renderChildValue = (childValue: any, childKey: string, childPath: string): React.ReactNode => {
+  const renderChildValue = (
+    childValue: any,
+    childKey: string,
+    childPath: string
+  ): React.ReactNode => {
     if (typeof childValue === 'object' && childValue !== null) {
       return (
         <TreeNode
@@ -56,33 +60,33 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     const isArray = Array.isArray(value);
     const hasReference = value.referenceOf;
     const hasAnchor = value.anchor;
-    
+
     return (
       <div key={path} className="ml-4">
-        <div 
+        <div
           className="flex items-center gap-2 py-1 px-2 cursor-pointer hover:bg-gray-50 rounded group"
           onClick={() => onToggle(path)}
         >
           {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-          
+
           <span className="font-medium text-gray-700">
             {nodeKey}: {isArray ? `[${value.length}]` : '{}'}
           </span>
-          
+
           {showMetadata && hasAnchor && (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
               <Anchor size={12} />
               {value.anchor}
             </span>
           )}
-          
+
           {showMetadata && hasReference && (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
               <Link size={12} />
               {value.referenceOf}
             </span>
           )}
-          
+
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             {hasReference && (
               <button
@@ -96,7 +100,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                 <Edit3 size={14} />
               </button>
             )}
-            
+
             {!hasAnchor && !hasReference && (
               <button
                 onClick={(e) => {
@@ -111,19 +115,16 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             )}
           </div>
         </div>
-        
+
         {isExpanded && (
           <div className="ml-4 border-l border-gray-200 pl-4">
-            {isArray 
-              ? value.map((item: any, index: number) => 
+            {isArray
+              ? value.map((item: any, index: number) =>
                   renderChildValue(item, `[${index}]`, `${path}[${index}]`)
                 )
               : Object.entries(value)
                   .filter(([k]) => k !== 'anchor' && k !== 'referenceOf')
-                  .map(([k, v]) => 
-                    renderChildValue(v, k, `${path}.${k}`)
-                  )
-            }
+                  .map(([k, v]) => renderChildValue(v, k, `${path}.${k}`))}
           </div>
         )}
       </div>

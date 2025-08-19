@@ -13,7 +13,7 @@ const EditReferenceModal: React.FC<EditReferenceModalProps> = ({
   editingReference,
   anchors,
   onUpdate,
-  onClose
+  onClose,
 }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -23,7 +23,7 @@ const EditReferenceModal: React.FC<EditReferenceModalProps> = ({
           Editing reference at: <code className="bg-gray-100 px-1 rounded">{editingReference}</code>
         </p>
         <div className="space-y-3">
-          {Object.keys(anchors).map(anchorName => (
+          {Object.keys(anchors).map((anchorName) => (
             <button
               key={anchorName}
               onClick={() => onUpdate(editingReference, anchorName)}
@@ -33,9 +33,7 @@ const EditReferenceModal: React.FC<EditReferenceModalProps> = ({
                 <Anchor size={14} className="text-blue-600" />
                 <span className="font-mono text-sm">{anchorName}</span>
               </div>
-              <div className="text-xs text-gray-600 mt-1">
-                {anchors[anchorName].path}
-              </div>
+              <div className="text-xs text-gray-600 mt-1">{anchors[anchorName].path}</div>
             </button>
           ))}
         </div>

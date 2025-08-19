@@ -11,83 +11,90 @@ import {
   createAnchor,
   generateScopeDocument,
   parseYamlString,
-  generateYamlFromJsonWithMetadata
+  generateYamlFromJsonWithMetadata,
 } from './utils/yaml-utils';
 import type { TabType } from './types/yaml-editor.types';
 
 const YAMLAnchorEditor: React.FC = () => {
   const [data, setData] = useState<any>({
-    "defaults": {
-      "user_profile": {
-        "role": "guest",
-        "timezone": "UTC",
-        "notifications": {
-          "email": true,
-          "sms": false,
-          "push": false
+    defaults: {
+      user_profile: {
+        role: 'guest',
+        timezone: 'UTC',
+        notifications: {
+          email: true,
+          sms: false,
+          push: false,
         },
-        "anchor": "default-user"
+        anchor: 'default-user',
       },
-      "database_connection": {
-        "adapter": "postgresql",
-        "host": "localhost",
-        "port": 5432,
-        "pool": 5,
-        "anchor": "default-db"
-      }
+      database_connection: {
+        adapter: 'postgresql',
+        host: 'localhost',
+        port: 5432,
+        pool: 5,
+        anchor: 'default-db',
+      },
     },
-    "users": [
+    users: [
       {
-        "role": "guest",
-        "timezone": "UTC",
-        "notifications": {
-          "email": true,
-          "sms": false,
-          "push": false
+        role: 'guest',
+        timezone: 'UTC',
+        notifications: {
+          email: true,
+          sms: false,
+          push: false,
         },
-        "referenceOf": "default-user",
-        "username": "charlie"
+        referenceOf: 'default-user',
+        username: 'charlie',
       },
       {
-        "role": "admin",
-        "timezone": "UTC",
-        "notifications": {
-          "email": true,
-          "sms": true,
-          "push": true
+        role: 'admin',
+        timezone: 'UTC',
+        notifications: {
+          email: true,
+          sms: true,
+          push: true,
         },
-        "referenceOf": "default-user",
-        "username": "diane",
-        "department": "Engineering"
-      }
+        referenceOf: 'default-user',
+        username: 'diane',
+        department: 'Engineering',
+      },
     ],
-    "environments": {
-      "development": {
-        "database": {
-          "adapter": "postgresql",
-          "host": "localhost",
-          "port": 5432,
-          "pool": 5,
-          "referenceOf": "default-db",
-          "database_name": "myapp_dev"
-        }
+    environments: {
+      development: {
+        database: {
+          adapter: 'postgresql',
+          host: 'localhost',
+          port: 5432,
+          pool: 5,
+          referenceOf: 'default-db',
+          database_name: 'myapp_dev',
+        },
       },
-      "production": {
-        "database": {
-          "adapter": "postgresql",
-          "host": "prod.database.server.com",
-          "port": 5432,
-          "pool": 5,
-          "referenceOf": "default-db",
-          "user": "prod_user",
-          "database_name": "myapp_prod"
-        }
-      }
-    }
+      production: {
+        database: {
+          adapter: 'postgresql',
+          host: 'prod.database.server.com',
+          port: 5432,
+          pool: 5,
+          referenceOf: 'default-db',
+          user: 'prod_user',
+          database_name: 'myapp_prod',
+        },
+      },
+    },
   });
 
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
-    new Set(['root', 'defaults', 'users', 'environments', 'defaults.user_profile', 'defaults.database_connection'])
+    new Set([
+      'root',
+      'defaults',
+      'users',
+      'environments',
+      'defaults.user_profile',
+      'defaults.database_connection',
+    ])
   );
   const [editingReference, setEditingReference] = useState<string | null>(null);
   const [creatingAnchor, setCreatingAnchor] = useState<string | null>(null);
@@ -105,7 +112,7 @@ const YAMLAnchorEditor: React.FC = () => {
   const references = useMemo(() => findReferences(data), [data]);
 
   const toggleNode = useCallback((path: string) => {
-    setExpandedNodes(prev => {
+    setExpandedNodes((prev) => {
       const newExpanded = new Set(prev);
       if (newExpanded.has(path)) {
         newExpanded.delete(path);
@@ -123,10 +130,10 @@ const YAMLAnchorEditor: React.FC = () => {
     const text = await file.text();
     setUploadedFileName(file.name);
     setError(null);
-    
+
     try {
       let jsonData: any;
-      
+
       if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
         jsonData = parseYamlString(text);
       } else if (file.name.endsWith('.json')) {
@@ -135,21 +142,20 @@ const YAMLAnchorEditor: React.FC = () => {
         setError('Please upload a YAML (.yaml, .yml) or JSON (.json) file');
         return;
       }
-      
+
       setData(jsonData);
-      
+
       const newExpanded = new Set(['root']);
-      Object.keys(jsonData).forEach(key => {
+      Object.keys(jsonData).forEach((key) => {
         newExpanded.add(key);
       });
       setExpandedNodes(newExpanded);
-      
+
       setEditingReference(null);
       setCreatingAnchor(null);
       setActiveTab('tree');
       setYamlOutput('');
       setScopeDoc('');
-      
     } catch (err) {
       setError(`Error parsing file: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
@@ -159,7 +165,7 @@ const YAMLAnchorEditor: React.FC = () => {
     try {
       const yamlContent = generateYamlFromJsonWithMetadata(data);
       setYamlOutput(yamlContent);
-      
+
       const blob = new Blob([yamlContent], { type: 'text/yaml' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -215,22 +221,25 @@ const YAMLAnchorEditor: React.FC = () => {
     setActiveTab('tree');
   };
 
-  const renderValue = useCallback((value: any, key: string, path: string, depth: number = 0): React.ReactNode => {
-    return (
-      <TreeNode
-        key={path}
-        value={value}
-        nodeKey={key}
-        path={path}
-        depth={depth}
-        expandedNodes={expandedNodes}
-        showMetadata={showMetadata}
-        onToggle={toggleNode}
-        onEditReference={setEditingReference}
-        onCreateAnchor={setCreatingAnchor}
-      />
-    );
-  }, [expandedNodes, showMetadata, toggleNode]);
+  const renderValue = useCallback(
+    (value: any, key: string, path: string, depth: number = 0): React.ReactNode => {
+      return (
+        <TreeNode
+          key={path}
+          value={value}
+          nodeKey={key}
+          path={path}
+          depth={depth}
+          expandedNodes={expandedNodes}
+          showMetadata={showMetadata}
+          onToggle={toggleNode}
+          onEditReference={setEditingReference}
+          onCreateAnchor={setCreatingAnchor}
+        />
+      );
+    },
+    [expandedNodes, showMetadata, toggleNode]
+  );
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -246,22 +255,22 @@ const YAMLAnchorEditor: React.FC = () => {
               <span>{Object.keys(anchors).length} anchors</span>
               <span>{references.length} references</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               {!isEditMode ? (
                 <>
                   <button
                     onClick={() => setShowMetadata(!showMetadata)}
                     className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      showMetadata 
-                        ? 'bg-blue-100 text-blue-700' 
+                      showMetadata
+                        ? 'bg-blue-100 text-blue-700'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
                     {showMetadata ? <Eye size={16} /> : <EyeOff size={16} />}
                     {showMetadata ? 'Hide' : 'Show'} Metadata
                   </button>
-                  
+
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -269,7 +278,7 @@ const YAMLAnchorEditor: React.FC = () => {
                     onChange={handleFileUpload}
                     className="hidden"
                   />
-                  
+
                   <button
                     onClick={() => {
                       if (fileInputRef.current) {
@@ -290,7 +299,7 @@ const YAMLAnchorEditor: React.FC = () => {
                     <Edit3 size={16} />
                     Edit YAML
                   </button>
-                  
+
                   <button
                     onClick={exportToYAML}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
@@ -308,7 +317,7 @@ const YAMLAnchorEditor: React.FC = () => {
                     <Save size={16} />
                     Save & Reload
                   </button>
-                  
+
                   <button
                     onClick={handleCancelEdit}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
@@ -348,8 +357,8 @@ const YAMLAnchorEditor: React.FC = () => {
                   {[
                     { id: 'tree' as TabType, label: 'Tree View', icon: FileText },
                     { id: 'yaml' as TabType, label: 'YAML Output', icon: Download },
-                    { id: 'scope' as TabType, label: 'Scope Document', icon: FileText }
-                  ].map(tab => (
+                    { id: 'scope' as TabType, label: 'Scope Document', icon: FileText },
+                  ].map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => {
@@ -378,9 +387,7 @@ const YAMLAnchorEditor: React.FC = () => {
                 {activeTab === 'tree' && (
                   <div className="max-h-96 overflow-y-auto">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Structure</h3>
-                    {Object.entries(data).map(([key, value]) => 
-                      renderValue(value, key, key, 0)
-                    )}
+                    {Object.entries(data).map(([key, value]) => renderValue(value, key, key, 0))}
                   </div>
                 )}
 
@@ -437,7 +444,11 @@ const YAMLAnchorEditor: React.FC = () => {
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-gray-900">Scope Document</h3>
                       <button
-                        onClick={() => copyToClipboard(scopeDoc || generateScopeDocument(anchors, references, uploadedFileName))}
+                        onClick={() =>
+                          copyToClipboard(
+                            scopeDoc || generateScopeDocument(anchors, references, uploadedFileName)
+                          )
+                        }
                         className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
                       >
                         <Copy size={14} />

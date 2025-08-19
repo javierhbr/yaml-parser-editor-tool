@@ -18,14 +18,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       id: 'anchor-editor' as TabType,
       label: 'YAML Anchor & Reference Editor',
       icon: FileText,
-      description: 'Visualize and manage YAML anchors (&) and references (*)'
+      description: 'Visualize and manage YAML anchors (&) and references (*)',
     },
     {
       id: 'ui-editor' as TabType,
       label: 'UI YAML Editor',
       icon: Code2,
-      description: 'Interactive YAML editor with visual interface'
-    }
+      description: 'Interactive YAML editor with visual interface',
+    },
   ];
 
   return (
@@ -34,9 +34,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              YAML Parser & Editor Suite
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">YAML Parser & Editor Suite</h1>
             <p className="text-gray-600 text-lg">
               Professional tools for YAML parsing, editing, and anchor management
             </p>
@@ -51,7 +49,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
-              
+
               return (
                 <button
                   key={tab.id}
@@ -65,9 +63,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <Icon size={20} className={isActive ? 'text-blue-600' : 'text-gray-400'} />
                   <div className="text-left">
                     <div className="font-semibold">{tab.label}</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {tab.description}
-                    </div>
+                    <div className="text-xs text-gray-500 mt-1">{tab.description}</div>
                   </div>
                 </button>
               );
