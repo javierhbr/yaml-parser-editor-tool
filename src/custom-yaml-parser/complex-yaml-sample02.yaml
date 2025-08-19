@@ -1,0 +1,630 @@
+# Complex YAML Configuration with Advanced Anchors and References
+# Application Configuration for Multi-Environment Deployment
+
+# ========================================
+# Base Configurations (Anchors)
+# ========================================
+
+# Database configurations
+database_configs:
+  # Base database configuration anchor
+  base_db: &base_database
+    driver: postgresql
+    port: 5432
+    timeout: 30
+    pool_size: 10
+    ssl_mode: require
+    retry_attempts: 3
+    connection_params:
+      charset: utf8
+      timezone: UTC
+
+  # Production database anchor
+  prod_db: &production_database
+    <<: *base_database
+    host: prod-db.company.com
+    database: production_app
+    pool_size: 50
+    backup_enabled: true
+
+  # Development database anchor
+  dev_db: &development_database
+    <<: *base_database
+    host: dev-db.company.com
+    database: dev_app
+    port: 5433
+    ssl_mode: disable
+
+# Server configurations
+server_configs:
+  # Base server configuration
+  base_server: &base_server_config
+    protocol: https
+    timeout: 60
+    max_connections: 1000
+    compression: gzip
+    security:
+      cors_enabled: true
+      rate_limiting: true
+      headers:
+        - X-Content-Type-Options: nosniff
+        - X-Frame-Options: DENY
+        - X-XSS-Protection: "1; mode=block"
+
+  # Load balancer configuration
+  load_balancer: &lb_config
+    <<: *base_server_config
+    algorithm: round_robin
+    health_check:
+      enabled: true
+      interval: 30
+      timeout: 10
+      path: /health
+
+# Monitoring configurations
+monitoring: &monitoring_base
+  enabled: true
+  metrics:
+    - cpu_usage
+    - memory_usage
+    - disk_usage
+    - network_io
+  alerts:
+    cpu_threshold: &cpu_alert 80
+    memory_threshold: &memory_alert 85
+    disk_threshold: &disk_alert 90
+  notification_channels: &notification_channels
+    - email: admin@company.com
+    - slack: "#alerts"
+    - webhook: "https://monitoring.company.com/webhook"
+
+# Security configurations
+security_base: &security_config
+  authentication:
+    method: oauth2
+    providers: &auth_providers
+      - google
+      - github
+      - azure_ad
+    session_timeout: &session_timeout 3600
+    refresh_token_ttl: &refresh_ttl 604800
+  encryption:
+    algorithm: &encryption_algo AES-256-GCM
+    key_rotation_days: &key_rotation 90
+  audit:
+    enabled: &audit_enabled true
+    log_level: &audit_level INFO
+    retention_days: &audit_retention 365
+
+# ========================================
+# Environment Configurations
+# ========================================
+
+environments:
+
+  # Production Environment
+  production:
+    name: "Production Environment"
+
+    # Database configuration using references
+    databases:
+      primary:
+        <<: *production_database
+        credentials:
+          username: !env PROD_DB_USER
+          password: !env PROD_DB_PASS
+      read_replica:
+        <<: *production_database
+        host: prod-db-replica.company.com
+        readonly: true
+      cache:
+        <<: *base_database
+        driver: redis
+        host: prod-redis.company.com
+        port: 6379
+
+    # Server cluster configuration
+    servers:
+      web_servers: &prod_web_servers
+        - name: web-01
+          <<: *base_server_config
+          host: web-01.prod.company.com
+          port: 443
+          resources:
+            cpu: 4
+            memory: 8GB
+            disk: 100GB
+        - name: web-02
+          <<: *base_server_config
+          host: web-02.prod.company.com
+          port: 443
+          resources:
+            cpu: 4
+            memory: 8GB
+            disk: 100GB
+        - name: web-03
+          <<: *base_server_config
+          host: web-03.prod.company.com
+          port: 443
+          resources:
+            cpu: 4
+            memory: 8GB
+            disk: 100GB
+
+      api_servers: &prod_api_servers
+        - name: api-01
+          <<: *base_server_config
+          host: api-01.prod.company.com
+          port: 8443
+          resources:
+            cpu: 8
+            memory: 16GB
+            disk: 200GB
+        - name: api-02
+          <<: *base_server_config
+          host: api-02.prod.company.com
+          port: 8443
+          resources:
+            cpu: 8
+            memory: 16GB
+            disk: 200GB
+
+      load_balancers:
+        - name: lb-main
+          <<: *lb_config
+          host: lb.prod.company.com
+          backend_servers: *prod_web_servers
+        - name: lb-api
+          <<: *lb_config
+          host: api-lb.prod.company.com
+          backend_servers: *prod_api_servers
+
+    # Monitoring configuration
+    monitoring:
+      <<: *monitoring_base
+      alerts:
+        cpu_threshold: *cpu_alert
+        memory_threshold: *memory_alert
+        disk_threshold: *disk_alert
+        custom_thresholds:
+          response_time: 500ms
+          error_rate: 1%
+      notification_channels: *notification_channels
+
+    # Security settings
+    security:
+      <<: *security_config
+      additional_rules:
+        - block_tor_exits: true
+        - geo_blocking:
+            - CN
+            - RU
+            - KP
+        - ddos_protection: enabled
+
+  # Staging Environment
+  staging:
+    name: "Staging Environment"
+
+    databases:
+      primary:
+        <<: *development_database
+        host: staging-db.company.com
+        database: staging_app
+      cache:
+        <<: *base_database
+        driver: redis
+        host: staging-redis.company.com
+        port: 6379
+
+    servers:
+      web_servers: &staging_web_servers
+        - name: staging-web
+          <<: *base_server_config
+          host: staging-web.company.com
+          port: 443
+          resources:
+            cpu: 2
+            memory: 4GB
+            disk: 50GB
+
+      api_servers: &staging_api_servers
+        - name: staging-api
+          <<: *base_server_config
+          host: staging-api.company.com
+          port: 8443
+          resources:
+            cpu: 4
+            memory: 8GB
+            disk: 100GB
+
+    monitoring:
+      <<: *monitoring_base
+      alerts:
+        cpu_threshold: 90
+        memory_threshold: 90
+        disk_threshold: 95
+      notification_channels:
+        - email: dev-team@company.com
+        - slack: "#staging-alerts"
+
+    security:
+      <<: *security_config
+      authentication:
+        method: basic_auth
+        session_timeout: *session_timeout
+
+  # Development Environment
+  development:
+    name: "Development Environment"
+
+    databases:
+      primary: *development_database
+
+    servers:
+      web_servers:
+        - name: dev-web
+          <<: *base_server_config
+          host: localhost
+          port: 3000
+          protocol: http
+          resources:
+            cpu: 1
+            memory: 2GB
+            disk: 20GB
+
+    monitoring:
+      enabled: false
+
+    security:
+      authentication:
+        method: none
+      encryption:
+        algorithm: *encryption_algo
+        key_rotation_days: 30
+      audit:
+        enabled: false
+
+# ========================================
+# Application Services Configuration
+# ========================================
+
+services:
+
+  # Microservices definitions
+  microservices:
+
+    # User service configuration
+    user_service: &user_service_base
+      name: user-service
+      version: "2.1.0"
+      port: 8001
+      database: primary
+      dependencies: &user_dependencies
+        - auth-service
+        - notification-service
+      resources: &service_resources_small
+        cpu: 0.5
+        memory: 1GB
+        disk: 10GB
+      health_check:
+        path: /health
+        interval: 30
+        timeout: 5
+
+    # Authentication service
+    auth_service: &auth_service_base
+      name: auth-service
+      version: "1.5.2"
+      port: 8002
+      database: primary
+      dependencies: []
+      resources: *service_resources_small
+      config:
+        providers: *auth_providers
+        session_timeout: *session_timeout
+        refresh_token_ttl: *refresh_ttl
+
+    # Notification service
+    notification_service: &notification_service_base
+      name: notification-service
+      version: "1.2.1"
+      port: 8003
+      database: cache
+      dependencies:
+        - user-service
+      resources: &service_resources_medium
+        cpu: 1
+        memory: 2GB
+        disk: 20GB
+      channels: *notification_channels
+
+    # Analytics service
+    analytics_service: &analytics_service_base
+      name: analytics-service
+      version: "3.0.0"
+      port: 8004
+      database: primary
+      dependencies:
+        - user-service
+        - notification-service
+      resources: &service_resources_large
+        cpu: 4
+        memory: 8GB
+        disk: 100GB
+      config:
+        retention_days: *audit_retention
+
+# ========================================
+# Deployment Configuration
+# ========================================
+
+deployments:
+
+  # Production deployment
+  production_deployment:
+    environment: production
+
+    # Service deployments using references
+    services:
+      user_service:
+        <<: *user_service_base
+        replicas: 3
+        resources: *service_resources_medium
+        environment_variables:
+          DB_HOST: !ref environments.production.databases.primary.host
+          DB_NAME: !ref environments.production.databases.primary.database
+
+      auth_service:
+        <<: *auth_service_base
+        replicas: 2
+        resources: *service_resources_small
+
+      notification_service:
+        <<: *notification_service_base
+        replicas: 2
+        resources: *service_resources_medium
+
+      analytics_service:
+        <<: *analytics_service_base
+        replicas: 1
+        resources: *service_resources_large
+
+    # Scaling policies
+    scaling:
+      auto_scaling: &auto_scaling_config
+        enabled: true
+        min_replicas: 1
+        max_replicas: 10
+        target_cpu: *cpu_alert
+        target_memory: *memory_alert
+        scale_up_cooldown: 300
+        scale_down_cooldown: 600
+
+  # Staging deployment
+  staging_deployment:
+    environment: staging
+
+    services:
+      user_service:
+        <<: *user_service_base
+        replicas: 1
+
+      auth_service:
+        <<: *auth_service_base
+        replicas: 1
+
+      notification_service:
+        <<: *notification_service_base
+        replicas: 1
+
+    scaling:
+      <<: *auto_scaling_config
+      max_replicas: 3
+
+# ========================================
+# Testing Configuration
+# ========================================
+
+testing:
+
+  # Test suites configuration
+  test_suites:
+
+    # Unit tests
+    unit_tests: &unit_test_config
+      framework: jest
+      coverage_threshold: 80
+      timeout: 10000
+      parallel: true
+      reporters:
+        - default
+        - coverage
+        - junit
+
+    # Integration tests
+    integration_tests: &integration_test_config
+      <<: *unit_test_config
+      framework: cypress
+      timeout: 30000
+      browser: chrome
+
+    # Load tests
+    load_tests: &load_test_config
+      tool: k6
+      duration: 300s
+      virtual_users: 100
+      thresholds:
+        response_time: 500ms
+        error_rate: 1%
+
+  # Test environments
+  test_environments:
+
+    ci_pipeline:
+      database: *development_database
+      services:
+        - user_service: *user_service_base
+        - auth_service: *auth_service_base
+      tests:
+        - unit: *unit_test_config
+        - integration: *integration_test_config
+
+    performance_testing:
+      database: *production_database
+      services:
+        - user_service: *user_service_base
+        - auth_service: *auth_service_base
+        - notification_service: *notification_service_base
+        - analytics_service: *analytics_service_base
+      tests:
+        - load: *load_test_config
+
+# ========================================
+# Feature Flags Configuration
+# ========================================
+
+feature_flags:
+
+  # Global feature flags
+  global: &global_features
+    new_ui_design: &new_ui_flag
+      enabled: false
+      rollout_percentage: 0
+      environments:
+        - development
+        - staging
+
+    advanced_analytics: &analytics_flag
+      enabled: true
+      rollout_percentage: 100
+      user_segments:
+        - premium_users
+        - enterprise_users
+
+    experimental_features: &experimental_flag
+      enabled: false
+      rollout_percentage: 5
+      environments:
+        - development
+      user_segments:
+        - beta_testers
+
+  # Environment-specific feature flags
+  by_environment:
+
+    production:
+      features:
+        new_ui_design:
+          <<: *new_ui_flag
+          enabled: true
+          rollout_percentage: 25
+
+        advanced_analytics: *analytics_flag
+
+        experimental_features:
+          <<: *experimental_flag
+          enabled: false
+          rollout_percentage: 0
+
+    staging:
+      features:
+        new_ui_design:
+          <<: *new_ui_flag
+          enabled: true
+          rollout_percentage: 100
+
+        advanced_analytics: *analytics_flag
+        experimental_features: *experimental_flag
+
+    development:
+      features:
+        new_ui_design:
+          <<: *new_ui_flag
+          enabled: true
+          rollout_percentage: 100
+
+        advanced_analytics: *analytics_flag
+        experimental_features: *experimental_flag
+
+# ========================================
+# Backup and Recovery Configuration
+# ========================================
+
+backup_recovery:
+
+  # Backup configurations
+  backup_configs:
+
+    # Database backups
+    database_backup: &db_backup_config
+      enabled: true
+      frequency: daily
+      retention_days: *audit_retention
+      compression: gzip
+      encryption: *encryption_algo
+      storage_locations: &backup_storage
+        - s3://company-backups/database/
+        - gs://company-backups-secondary/database/
+
+    # Application backups
+    application_backup: &app_backup_config
+      enabled: true
+      frequency: weekly
+      retention_days: 90
+      includes:
+        - configuration_files
+        - user_uploads
+        - logs
+      storage_locations: *backup_storage
+
+  # Recovery procedures
+  recovery_procedures:
+
+    # Database recovery
+    database_recovery:
+      rto: 4h  # Recovery Time Objective
+      rpo: 1h  # Recovery Point Objective
+      backup_source: *db_backup_config
+      automated_testing: monthly
+
+    # Application recovery
+    application_recovery:
+      rto: 2h
+      rpo: 24h
+      backup_source: *app_backup_config
+      automated_testing: weekly
+
+# ========================================
+# Compliance and Audit Configuration
+# ========================================
+
+compliance:
+
+  # Regulatory compliance
+  regulations: &compliance_regs
+    gdpr:
+      enabled: *audit_enabled
+      data_retention: *audit_retention
+      consent_management: true
+
+    hipaa:
+      enabled: false
+      encryption_required: *encryption_algo
+
+    sox:
+      enabled: *audit_enabled
+      financial_controls: true
+      audit_trail: *audit_level
+
+  # Audit configuration
+  audit_config:
+    <<: *security_config
+    compliance_frameworks: *compliance_regs
+    reporting:
+      frequency: monthly
+      recipients: *notification_channels
+      formats:
+        - pdf
+        - csv
+        - json

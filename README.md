@@ -12,5 +12,6 @@ Available scripts:
 - npm run typecheck — run tsc
 
 Notes:
+
 - Run `npm install` to install dependencies.
 - Vite serves at http://localhost:5173 by default.

@@ -1,0 +1,62 @@
+# ===============================================================
+#  YAML Example: Anchors (&) and References (*)
+# ===============================================================
+# This file demonstrates how to define reusable blocks of code
+# to keep your configurations DRY (Don't Repeat Yourself).
+# ---------------------------------------------------------------
+
+# 1. Define a 'defaults' section to hold reusable configurations.
+defaults:
+  # Define a base user profile configuration and anchor it with '&default-user'.
+  user_profile: &default-user
+    role: guest
+    timezone: "UTC"
+    notifications:
+      email: true
+      sms: false
+      push: false
+
+  # Define a base database connection and anchor it with '&default-db'.
+  database_connection: &default-db
+    adapter: postgresql
+    host: localhost
+    port: 5432
+    pool: 5
+
+# 2. Use the anchored configurations in other parts of the file.
+users:
+  # This user inherits the default profile completely.
+  - username: charlie
+    # Use '<<: *default-user' to merge the anchored 'default-user' map here.
+    <<: *default-user
+
+  # This user inherits the default profile but overrides and adds properties.
+  - username: diane
+    <<: *default-user
+    # --- Overridden value ---
+    role: admin
+    # --- New value specific to this user ---
+    department: Engineering
+    # --- Nested override ---
+    notifications:
+      email: true
+      sms: true # Changed from false to true
+      push: true # Changed from false to true
+
+# 3. Apply the same concept for different environments.
+environments:
+  development:
+    database:
+      # Use the reference to the default database connection.
+      <<: *default-db
+      # Add a database name specific to the development environment.
+      database_name: myapp_dev
+
+  production:
+    database:
+      <<: *default-db
+      # Override the host and user for the production environment.
+      host: prod.database.server.com
+      user: prod_user
+      # Add the production database name.
+      database_name: myapp_prod

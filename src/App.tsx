@@ -1,10 +1,6 @@
-import React from 'react'
+import React from 'react';
+import YAMLAnchorEditor from './yaml-anchor-editor';
 
 export default function App() {
-  return (
-    <div className="app">
-      <h1>React 19.1 + TypeScript Starter</h1>
-      <p>Edit <code>src/App.tsx</code> and save to hot-reload.</p>
-    </div>
-  )
+  return <YAMLAnchorEditor />;
 }

@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/config.schema.json",
+  "title": "Configuration Schema",
+  "description": "A schema to validate the YAML configuration with defaults, users, and environments.",
+  "type": "object",
+  "definitions": {
+    "notification_settings": {
+      "type": "object",
+      "properties": {
+        "email": { "type": "boolean" },
+        "sms": { "type": "boolean" },
+        "push": { "type": "boolean" }
+      },
+      "required": ["email", "sms", "push"]
+    },
+    "user_profile": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["guest", "admin"]
+        },
+        "timezone": {
+          "type": "string",
+          "description": "IANA time zone name",
+          "enum": ["UTC", "America/New_York", "America/Chicago", "Europe/London"]
+        },
+        "notifications": { "$ref": "#/definitions/notification_settings" }
+      },
+      "required": ["role", "timezone", "notifications"]
+    },
+    "database_connection": {
+      "type": "object",
+      "properties": {
+        "adapter": {
+          "type": "string",
+          "enum": ["postgresql", "mysql", "sqlite", "mssql"]
+        },
+        "host": { "type": "string" },
+        "port": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 65535
+        },
+        "pool": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "required": ["adapter", "host", "port", "pool"]
+    }
+  },
+  "properties": {
+    "defaults": {
+      "description": "Default configurations to be reused.",
+      "type": "object",
+      "properties": {
+        "user_profile": { "$ref": "#/definitions/user_profile" },
+        "database_connection": { "$ref": "#/definitions/database_connection" }
+      },
+      "required": ["user_profile", "database_connection"]
+    },
+    "users": {
+      "description": "A list of user configurations.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "allOf": [
+          { "$ref": "#/definitions/user_profile" }
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 20
+          },
+          "department": {
+            "type": "string",
+            "maxLength": 50
+          }
+        },
+        "required": ["username"]
+      }
+    },
+    "environments": {
+      "description": "Environment-specific configurations.",
+      "type": "object",
+      "properties": {
+        "development": {
+          "type": "object",
+          "properties": {
+            "database": {
+              "allOf": [ { "$ref": "#/definitions/database_connection" } ],
+              "properties": {
+                "database_name": {
+                  "type": "string",
+                  "minLength": 3,
+                  "pattern": "^[a-zA-Z0-9_]+$"
+                }
+              },
+              "required": ["database_name"]
+            }
+          }
+        },
+        "production": {
+          "type": "object",
+          "properties": {
+            "database": {
+              "allOf": [ { "$ref": "#/definitions/database_connection" } ],
+              "properties": {
+                "database_name": {
+                  "type": "string",
+                  "minLength": 3,
+                  "pattern": "^[a-zA-Z0-9_]+$"
+                },
+                "user": { "type": "string" }
+              },
+              "required": ["database_name", "user"]
+            }
+          }
+        }
+      },
+      "required": ["development", "production"]
+    }
+  },
+  "required": ["defaults", "users", "environments"]
+}

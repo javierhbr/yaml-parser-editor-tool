@@ -1,0 +1,107 @@
+# Definitions for reusable components
+definitions:
+  # Anchor for a default set of environment variables
+  default_env_vars: &default_env
+    LOG_LEVEL: "info"
+    ENABLE_CACHING: true
+
+  # Anchor for a base database connection configuration
+  db_connection: &db_base
+    adapter: postgresql
+    host: localhost
+    pool: 5
+
+  # Anchor for a list of base permissions for a regular user
+  base_permissions: &base_perms
+    - "read:posts"
+    - "write:comments"
+
+  # Anchor for a reusable pipeline step configuration
+  docker_build_step: &docker_build
+    name: "Build and Push Docker Image"
+    image: docker:latest
+    commands:
+      - docker build -t myapp:$CI_COMMIT_SHA .
+      - docker push myapp:$CI_COMMIT_SHA
+
+# Application Environments Configuration
+environments:
+  development:
+    <<: *default_env # Merges the default_env object here
+    database:
+      <<: *db_base # Merges the db_base object here
+      database_name: "app_dev"
+    api_url: "http://localhost:3000/api"
+
+  production:
+    <<: *default_env # Reuse env vars
+    LOG_LEVEL: "error" # Override a specific value
+    database:
+      <<: *db_base # Reuse db config
+      host: prod.database.server.com
+      pool: 50 # Override a value
+      database_name: "app_prod"
+    api_url: "https://api.myapp.com"
+
+# User Roles and Permissions
+roles:
+  # Define a "viewer" role with base permissions
+  - role: &viewer_role
+      name: Viewer
+      permissions: *base_perms # Use the reference to the base permissions array
+
+  # Define an "editor" role that extends the base permissions
+  - role: &editor_role
+      name: Editor
+      permissions:
+        - *base_perms # Reference the base array...
+        - "write:posts" # ...and add a new permission
+        - "delete:comments"
+
+  # Define an "admin" role with its own specific permissions
+  - role: &admin_role
+      name: Admin
+      permissions:
+        - "manage:users"
+        - "manage:settings"
+
+# User Accounts
+users:
+  - username: charlie
+    <<: *viewer_role # Assign the entire viewer role object
+    contact: &charlie_contact
+      email: charlie@example.com
+      phone: "111-222-3333"
+
+  - username: diane
+    <<: *admin_role # Assign the admin role
+    contact:
+      email: diane@example.com
+      phone: "444-555-6666"
+
+# Emergency Contact list using references to user contact info
+emergency_contacts:
+  - *charlie_contact
+
+# CI/CD Pipeline Configuration
+pipeline:
+  stages:
+    - test
+    - build
+    - deploy
+
+  jobs:
+    unit_test:
+      stage: test
+      commands:
+        - npm install
+        - npm test
+
+    build_image:
+      stage: build
+      <<: *docker_build # Reuse the entire docker build step
+
+    deploy_to_prod:
+      stage: deploy
+      commands:
+        - echo "Deploying commit $CI_COMMIT_SHA to production"

@@ -1,0 +1,69 @@
+{
+  "defaults": {
+    "user_profile": {
+      "role": "guest",
+      "timezone": "UTC",
+      "notifications": {
+        "email": true,
+        "sms": false,
+        "push": false
+      },
+      "anchor": "default-user"
+    },
+    "database_connection": {
+      "adapter": "postgresql",
+      "host": "localhost",
+      "port": 5432,
+      "pool": 5,
+      "anchor": "default-db"
+    }
+  },
+  "users": [
+    {
+      "role": "guest",
+      "timezone": "UTC",
+      "notifications": {
+        "email": true,
+        "sms": false,
+        "push": false
+      },
+      "referenceOf": "default-user",
+      "username": "charlie"
+    },
+    {
+      "role": "admin",
+      "timezone": "UTC",
+      "notifications": {
+        "email": true,
+        "sms": true,
+        "push": true
+      },
+      "referenceOf": "default-user",
+      "username": "diane",
+      "department": "Engineering"
+    }
+  ],
+  "environments": {
+    "development": {
+      "database": {
+        "adapter": "postgresql",
+        "host": "localhost",
+        "port": 5432,
+        "pool": 5,
+        "referenceOf": "default-db",
+        "database_name": "myapp_dev"
+      }
+    },
+    "production": {
+      "database": {
+        "adapter": "postgresql",
+        "host": "prod.database.server.com",
+        "port": 5432,
+        "pool": 5,
+        "referenceOf": "default-db",
+        "user": "prod_user",
+        "database_name": "myapp_prod"
+      }
+    }
+  }
+}

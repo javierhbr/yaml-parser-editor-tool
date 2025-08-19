@@ -17,7 +17,7 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
     'plugin:@typescript-eslint/recommended',
-    'prettier'
+    'prettier',
   ],
   rules: {
     'react/react-in-jsx-scope': 'off',
@@ -28,4 +28,4 @@ module.exports = {
       version: 'detect',
     },
   },
-}
+};
