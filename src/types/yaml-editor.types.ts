@@ -6,13 +6,13 @@ export interface YAMLMetadata {
 export interface AnchorInfo {
   name: string;
   path: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 export interface ReferenceInfo {
   path: string;
   anchor: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 export interface NodePath {

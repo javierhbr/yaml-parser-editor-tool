@@ -1,90 +1,30 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Upload, Download, FileText, Eye, EyeOff, Copy, Edit3, Save, X } from 'lucide-react';
 import AnchorManager from './components/AnchorManager';
 import TreeNode from './components/TreeNode';
 import EditReferenceModal from './components/EditReferenceModal';
 import CreateAnchorModal from './components/CreateAnchorModal';
 import {
-  findAnchors,
-  findReferences,
   updateReference,
   createAnchor,
   generateScopeDocument,
   parseYamlString,
-  generateYamlFromJsonWithMetadata,
 } from './utils/yaml-utils';
 import type { TabType } from './types/yaml-editor.types';
+import { useDataContext } from './context/DataContext';
 
 const YAMLAnchorEditor: React.FC = () => {
-  const [data, setData] = useState<any>({
-    defaults: {
-      user_profile: {
-        role: 'guest',
-        timezone: 'UTC',
-        notifications: {
-          email: true,
-          sms: false,
-          push: false,
-        },
-        anchor: 'default-user',
-      },
-      database_connection: {
-        adapter: 'postgresql',
-        host: 'localhost',
-        port: 5432,
-        pool: 5,
-        anchor: 'default-db',
-      },
-    },
-    users: [
-      {
-        role: 'guest',
-        timezone: 'UTC',
-        notifications: {
-          email: true,
-          sms: false,
-          push: false,
-        },
-        referenceOf: 'default-user',
-        username: 'charlie',
-      },
-      {
-        role: 'admin',
-        timezone: 'UTC',
-        notifications: {
-          email: true,
-          sms: true,
-          push: true,
-        },
-        referenceOf: 'default-user',
-        username: 'diane',
-        department: 'Engineering',
-      },
-    ],
-    environments: {
-      development: {
-        database: {
-          adapter: 'postgresql',
-          host: 'localhost',
-          port: 5432,
-          pool: 5,
-          referenceOf: 'default-db',
-          database_name: 'myapp_dev',
-        },
-      },
-      production: {
-        database: {
-          adapter: 'postgresql',
-          host: 'prod.database.server.com',
-          port: 5432,
-          pool: 5,
-          referenceOf: 'default-db',
-          user: 'prod_user',
-          database_name: 'myapp_prod',
-        },
-      },
-    },
-  });
+  const { 
+    data, 
+    setData, 
+    fileName, 
+    anchors, 
+    references, 
+    loadFromFile, 
+    exportYaml, 
+    error, 
+    setError 
+  } = useDataContext();
 
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
     new Set([
@@ -99,17 +39,12 @@ const YAMLAnchorEditor: React.FC = () => {
   const [editingReference, setEditingReference] = useState<string | null>(null);
   const [creatingAnchor, setCreatingAnchor] = useState<string | null>(null);
   const [showMetadata, setShowMetadata] = useState(true);
-  const [uploadedFileName, setUploadedFileName] = useState('sample.yaml');
   const [activeTab, setActiveTab] = useState<TabType>('tree');
   const [yamlOutput, setYamlOutput] = useState('');
   const [scopeDoc, setScopeDoc] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editableYaml, setEditableYaml] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const anchors = useMemo(() => findAnchors(data), [data]);
-  const references = useMemo(() => findReferences(data), [data]);
 
   const toggleNode = useCallback((path: string) => {
     setExpandedNodes((prev) => {
@@ -127,55 +62,37 @@ const YAMLAnchorEditor: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const text = await file.text();
-    setUploadedFileName(file.name);
-    setError(null);
-
     try {
-      let jsonData: any;
-
-      if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
-        jsonData = parseYamlString(text);
-      } else if (file.name.endsWith('.json')) {
-        jsonData = JSON.parse(text);
-      } else {
-        setError('Please upload a YAML (.yaml, .yml) or JSON (.json) file');
-        return;
-      }
-
-      setData(jsonData);
-
+      await loadFromFile(file);
+      
+      // Reset UI state after successful load
       const newExpanded = new Set(['root']);
-      Object.keys(jsonData).forEach((key) => {
+      Object.keys(data).forEach((key) => {
         newExpanded.add(key);
       });
       setExpandedNodes(newExpanded);
-
+      
       setEditingReference(null);
       setCreatingAnchor(null);
       setActiveTab('tree');
       setYamlOutput('');
       setScopeDoc('');
-    } catch (err) {
-      setError(`Error parsing file: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } catch {
+      // Error is handled by the context
     }
   };
 
   const exportToYAML = () => {
-    try {
-      const yamlContent = generateYamlFromJsonWithMetadata(data);
-      setYamlOutput(yamlContent);
+    const yamlContent = exportYaml();
+    setYamlOutput(yamlContent);
 
-      const blob = new Blob([yamlContent], { type: 'text/yaml' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = uploadedFileName.replace(/\.(json|yaml|yml)$/, '_edited.yaml');
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      setError(`Error generating YAML: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
+    const blob = new Blob([yamlContent], { type: 'text/yaml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName.replace(/\.(json|yaml|yml)$/, '_edited.yaml');
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const copyToClipboard = (text: string) => {
@@ -197,7 +114,7 @@ const YAMLAnchorEditor: React.FC = () => {
   };
 
   const handleEnterEditMode = () => {
-    const currentYaml = generateYamlFromJsonWithMetadata(data);
+    const currentYaml = exportYaml();
     setEditableYaml(currentYaml);
     setIsEditMode(true);
     setActiveTab('yaml');
@@ -209,7 +126,6 @@ const YAMLAnchorEditor: React.FC = () => {
       setData(newData);
       setIsEditMode(false);
       setActiveTab('tree');
-      setError(null);
     } catch (err) {
       setError(`Error parsing YAML: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
@@ -222,7 +138,7 @@ const YAMLAnchorEditor: React.FC = () => {
   };
 
   const renderValue = useCallback(
-    (value: any, key: string, path: string, depth: number = 0): React.ReactNode => {
+    (value: unknown, key: string, path: string, depth: number = 0): React.ReactNode => {
       return (
         <TreeNode
           key={path}
@@ -250,7 +166,7 @@ const YAMLAnchorEditor: React.FC = () => {
             <div className="flex items-center gap-4 text-sm text-gray-600">
               <span className="inline-flex items-center gap-1">
                 <FileText size={14} />
-                {uploadedFileName}
+                {fileName}
               </span>
               <span>{Object.keys(anchors).length} anchors</span>
               <span>{references.length} references</span>
@@ -364,9 +280,9 @@ const YAMLAnchorEditor: React.FC = () => {
                       onClick={() => {
                         setActiveTab(tab.id);
                         if (tab.id === 'yaml') {
-                          setYamlOutput(generateYamlFromJsonWithMetadata(data));
+                          setYamlOutput(exportYaml());
                         } else if (tab.id === 'scope') {
-                          setScopeDoc(generateScopeDocument(anchors, references, uploadedFileName));
+                          setScopeDoc(generateScopeDocument(anchors, references, fileName));
                         }
                       }}
                       className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium text-sm transition-colors ${
@@ -446,7 +362,7 @@ const YAMLAnchorEditor: React.FC = () => {
                       <button
                         onClick={() =>
                           copyToClipboard(
-                            scopeDoc || generateScopeDocument(anchors, references, uploadedFileName)
+                            scopeDoc || generateScopeDocument(anchors, references, fileName)
                           )
                         }
                         className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
@@ -456,7 +372,7 @@ const YAMLAnchorEditor: React.FC = () => {
                       </button>
                     </div>
                     <pre className="bg-gray-50 p-4 rounded-lg text-sm overflow-x-auto border whitespace-pre-wrap">
-                      {scopeDoc || generateScopeDocument(anchors, references, uploadedFileName)}
+                      {scopeDoc || generateScopeDocument(anchors, references, fileName)}
                     </pre>
                   </div>
                 )}

@@ -2,6 +2,9 @@
  * This module converts JSON objects with anchor and referenceOf metadata
  * back into YAML format with proper anchors (&) and references (*).
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import YAML from 'yaml';
 

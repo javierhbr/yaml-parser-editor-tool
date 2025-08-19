@@ -3,6 +3,8 @@
  * It injects 'anchor' and 'referenceOf' properties into the JSON to show
  * where anchors were defined and referenced.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable prefer-const */
 
 import YAML, { Document } from 'yaml';
 

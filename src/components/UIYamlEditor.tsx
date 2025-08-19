@@ -1,138 +1,41 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Upload, Download, Copy, Check, FileText, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Upload, Download, Copy, Check, Eye, EyeOff } from 'lucide-react';
 import VisualEditorElement from './VisualEditor';
 import {
-  findAnchors,
-  findReferences,
   updateReference,
   createAnchor,
-  generateYamlFromJsonWithMetadata,
-  parseYamlString,
 } from '../utils/yaml-utils';
-import schemaData from '../custom-yaml-parser/schema-sample-yaml.json';
-
-interface JSONSchema {
-  type: string;
-  properties?: { [key: string]: JSONSchema };
-  items?: JSONSchema;
-  enum?: string[];
-  $ref?: string;
-  allOf?: JSONSchema[];
-  required?: string[];
-  description?: string;
-  minimum?: number;
-  maximum?: number;
-  minLength?: number;
-  maxLength?: number;
-  pattern?: string;
-  definitions?: { [key: string]: JSONSchema };
-  title?: string;
-}
-
-interface FormData {
-  [key: string]: any;
-}
+import { useDataContext } from '../context/DataContext';
 
 const UIYamlEditor: React.FC = () => {
-  const [schema] = useState<JSONSchema>(schemaData as JSONSchema);
-  const [formData, setFormData] = useState<FormData>({});
+  const { 
+    data: formData, 
+    setData: setFormData, 
+    anchors, 
+    references, 
+    loadFromFile, 
+    exportYaml 
+  } = useDataContext();
+  
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['root']));
   const [yamlOutput, setYamlOutput] = useState('');
   const [copied, setCopied] = useState(false);
   const [showMetadata, setShowMetadata] = useState(true);
 
-  // Get default sample data based on schema structure
-  const getDefaultData = (): FormData => {
-    return {
-      defaults: {
-        user_profile: {
-          role: 'guest',
-          timezone: 'UTC',
-          notifications: {
-            email: true,
-            sms: false,
-            push: false,
-          },
-          anchor: 'default-user',
-        },
-        database_connection: {
-          adapter: 'postgresql',
-          host: 'localhost',
-          port: 5432,
-          pool: 5,
-          anchor: 'default-db',
-        },
-      },
-      users: [
-        {
-          role: 'guest',
-          timezone: 'UTC',
-          notifications: {
-            email: true,
-            sms: false,
-            push: false,
-          },
-          referenceOf: 'default-user',
-          username: 'charlie',
-        },
-        {
-          role: 'admin',
-          timezone: 'UTC',
-          notifications: {
-            email: true,
-            sms: true,
-            push: true,
-          },
-          referenceOf: 'default-user',
-          username: 'diane',
-          department: 'Engineering',
-        },
-      ],
-      environments: {
-        development: {
-          database: {
-            adapter: 'postgresql',
-            host: 'localhost',
-            port: 5432,
-            pool: 5,
-            referenceOf: 'default-db',
-            database_name: 'myapp_dev',
-          },
-        },
-        production: {
-          database: {
-            adapter: 'postgresql',
-            host: 'prod.database.server.com',
-            port: 5432,
-            pool: 5,
-            referenceOf: 'default-db',
-            user: 'prod_user',
-            database_name: 'myapp_prod',
-          },
-        },
-      },
-    };
-  };
-
-  const anchors = useMemo(() => findAnchors(formData), [formData]);
-  const references = useMemo(() => findReferences(formData), [formData]);
-
-  // Initialize form data with default sample data
+  // Initialize expanded nodes when data changes
   useEffect(() => {
-    const initialData = getDefaultData();
-    setFormData(initialData);
-
-    // Set initial expanded nodes
-    const defaultExpanded = new Set([
-      'root',
-      'defaults',
-      'users',
-      'environments',
-      'defaults.user_profile',
-      'defaults.database_connection',
-    ]);
-    setExpandedNodes(defaultExpanded);
-  }, []);
+    if (Object.keys(formData).length > 0) {
+      const defaultExpanded = new Set([
+        'root',
+        'defaults',
+        'users',
+        'environments',
+        'defaults.user_profile',
+        'defaults.database_connection',
+      ]);
+      setExpandedNodes(defaultExpanded);
+    }
+  }, [formData]);
 
   const toggleNode = useCallback((path: string) => {
     setExpandedNodes((prev) => {
@@ -146,7 +49,7 @@ const UIYamlEditor: React.FC = () => {
     });
   }, []);
 
-  const updateData = useCallback((path: string, updates: any) => {
+  const updateData = useCallback((path: string, updates: Record<string, unknown>) => {
     setFormData((prevData) => {
       const newData = JSON.parse(JSON.stringify(prevData));
       const pathParts = path.split('.');
@@ -176,7 +79,7 @@ const UIYamlEditor: React.FC = () => {
 
       return newData;
     });
-  }, []);
+  }, [setFormData]);
 
   const addItem = useCallback((path: string, itemType: string) => {
     setFormData((prevData) => {
@@ -201,7 +104,7 @@ const UIYamlEditor: React.FC = () => {
       current.push(newItem);
       return newData;
     });
-  }, []);
+  }, [setFormData]);
 
   const deleteItem = useCallback((path: string) => {
     setFormData((prevData) => {
@@ -235,14 +138,14 @@ const UIYamlEditor: React.FC = () => {
 
       return newData;
     });
-  }, []);
+  }, [setFormData]);
 
   const handleCreateAnchor = useCallback(
     (path: string, anchorName: string) => {
       const newData = createAnchor(formData, path, anchorName);
       setFormData(newData);
     },
-    [formData]
+    [formData, setFormData]
   );
 
   const handleSetReference = useCallback(
@@ -250,7 +153,7 @@ const UIYamlEditor: React.FC = () => {
       const newData = updateReference(formData, path, anchorName, anchors);
       setFormData(newData);
     },
-    [formData, anchors]
+    [formData, anchors, setFormData]
   );
 
   const handleRemoveReference = useCallback((path: string) => {
@@ -281,21 +184,97 @@ const UIYamlEditor: React.FC = () => {
 
       return newData;
     });
-  }, []);
+  }, [setFormData]);
+
+  const handleEditAnchor = useCallback((path: string, oldAnchorName: string, newAnchorName: string) => {
+    setFormData((prevData) => {
+      const newData = JSON.parse(JSON.stringify(prevData));
+      
+      // Update the anchor name at the specified path
+      const pathParts = path.split('.');
+      let current = newData;
+      
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const key = pathParts[i];
+        if (key.includes('[') && key.includes(']')) {
+          const arrayKey = key.split('[')[0];
+          const index = parseInt(key.split('[')[1].split(']')[0]);
+          current = current[arrayKey][index];
+        } else {
+          current = current[key];
+        }
+      }
+      
+      const lastKey = pathParts[pathParts.length - 1];
+      if (lastKey.includes('[') && lastKey.includes(']')) {
+        const arrayKey = lastKey.split('[')[0];
+        const index = parseInt(lastKey.split('[')[1].split(']')[0]);
+        current[arrayKey][index].anchor = newAnchorName;
+      } else {
+        current[lastKey].anchor = newAnchorName;
+      }
+      
+      // Update all references to use the new anchor name
+      const updateReferences = (obj: unknown): unknown => {
+        if (Array.isArray(obj)) {
+          return obj.map(updateReferences);
+        } else if (obj && typeof obj === 'object') {
+          const newObj = { ...obj };
+          if (newObj.referenceOf === oldAnchorName) {
+            newObj.referenceOf = newAnchorName;
+          }
+          Object.keys(newObj).forEach(key => {
+            if (key !== 'anchor' && key !== 'referenceOf') {
+              newObj[key] = updateReferences(newObj[key]);
+            }
+          });
+          return newObj;
+        }
+        return obj;
+      };
+      
+      return updateReferences(newData);
+    });
+  }, [setFormData]);
+
+  const handleRemoveAnchor = useCallback((path: string) => {
+    setFormData((prevData) => {
+      const newData = JSON.parse(JSON.stringify(prevData));
+      const pathParts = path.split('.');
+      let current = newData;
+      
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const key = pathParts[i];
+        if (key.includes('[') && key.includes(']')) {
+          const arrayKey = key.split('[')[0];
+          const index = parseInt(key.split('[')[1].split(']')[0]);
+          current = current[arrayKey][index];
+        } else {
+          current = current[key];
+        }
+      }
+      
+      const lastKey = pathParts[pathParts.length - 1];
+      if (lastKey.includes('[') && lastKey.includes(']')) {
+        const arrayKey = lastKey.split('[')[0];
+        const index = parseInt(lastKey.split('[')[1].split(']')[0]);
+        delete current[arrayKey][index].anchor;
+      } else {
+        delete current[lastKey].anchor;
+      }
+      
+      return newData;
+    });
+  }, [setFormData]);
 
   // Generate YAML output
   useEffect(() => {
-    try {
-      const yamlContent = generateYamlFromJsonWithMetadata(formData);
-      setYamlOutput(yamlContent);
-    } catch (error) {
-      console.error('Error generating YAML:', error);
-      setYamlOutput('# Error generating YAML');
-    }
-  }, [formData]);
+    const yamlContent = exportYaml();
+    setYamlOutput(yamlContent);
+  }, [formData, exportYaml]);
 
   const renderValue = useCallback(
-    (value: any, key: string, path: string): React.ReactNode => {
+    (value: unknown, key: string, path: string): React.ReactNode => {
       return (
         <VisualEditorElement
           key={path}
@@ -311,7 +290,10 @@ const UIYamlEditor: React.FC = () => {
           onCreateAnchor={handleCreateAnchor}
           onSetReference={handleSetReference}
           onRemoveReference={handleRemoveReference}
+          onEditAnchor={handleEditAnchor}
+          onRemoveAnchor={handleRemoveAnchor}
           anchors={anchors}
+          references={references}
           showMetadata={showMetadata}
         />
       );
@@ -326,7 +308,10 @@ const UIYamlEditor: React.FC = () => {
       handleCreateAnchor,
       handleSetReference,
       handleRemoveReference,
+      handleEditAnchor,
+      handleRemoveAnchor,
       anchors,
+      references,
     ]
   );
 
@@ -351,34 +336,22 @@ const UIYamlEditor: React.FC = () => {
     if (!file) return;
 
     try {
-      const content = await file.text();
-      let newData: any;
-
-      if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
-        newData = parseYamlString(content);
-      } else if (file.name.endsWith('.json')) {
-        newData = JSON.parse(content);
-      } else {
-        alert('Please upload a YAML (.yaml, .yml) or JSON (.json) file');
-        return;
-      }
-
-      setFormData(newData);
+      await loadFromFile(file);
 
       // Set initial expanded nodes based on data structure
       const newExpanded = new Set(['root']);
-      Object.keys(newData).forEach((key) => {
+      Object.keys(formData).forEach((key) => {
         newExpanded.add(key);
-        if (typeof newData[key] === 'object' && newData[key] !== null) {
-          Object.keys(newData[key]).forEach((subKey) => {
+        if (typeof formData[key] === 'object' && formData[key] !== null) {
+          Object.keys(formData[key]).forEach((subKey) => {
             newExpanded.add(`${key}.${subKey}`);
           });
         }
       });
       setExpandedNodes(newExpanded);
     } catch (error) {
+      // Error handled by context
       console.error('Error loading file:', error);
-      alert('Error loading file. Please check the file format.');
     }
   };
 
@@ -465,16 +438,9 @@ const UIYamlEditor: React.FC = () => {
                       Load a YAML or JSON file to start editing, or the component will use sample
                       data.
                     </p>
-                    <button
-                      onClick={() => {
-                        const initialData = getDefaultData();
-                        setFormData(initialData);
-                        setExpandedNodes(new Set(['root', 'defaults', 'users', 'environments']));
-                      }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      Load Sample Data
-                    </button>
+                    <p className="text-sm text-gray-500">
+                      Sample data is loaded by default
+                    </p>
                   </div>
                 )}
               </div>

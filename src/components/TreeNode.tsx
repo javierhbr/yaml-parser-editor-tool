@@ -2,7 +2,7 @@ import React from 'react';
 import { ChevronRight, ChevronDown, Anchor, Link, Plus, Edit3 } from 'lucide-react';
 
 interface TreeNodeProps {
-  value: any;
+  value: unknown;
   nodeKey: string;
   path: string;
   depth: number;
@@ -26,7 +26,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 }) => {
   const isExpanded = expandedNodes.has(path);
   const renderChildValue = (
-    childValue: any,
+    childValue: unknown,
     childKey: string,
     childPath: string
   ): React.ReactNode => {
@@ -119,10 +119,10 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         {isExpanded && (
           <div className="ml-4 border-l border-gray-200 pl-4">
             {isArray
-              ? value.map((item: any, index: number) =>
+              ? (value as unknown[]).map((item: unknown, index: number) =>
                   renderChildValue(item, `[${index}]`, `${path}[${index}]`)
                 )
-              : Object.entries(value)
+              : Object.entries(value as Record<string, unknown>)
                   .filter(([k]) => k !== 'anchor' && k !== 'referenceOf')
                   .map(([k, v]) => renderChildValue(v, k, `${path}.${k}`))}
           </div>

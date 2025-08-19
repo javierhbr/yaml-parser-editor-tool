@@ -9,6 +9,7 @@ import {
   Target,
   Check,
   X,
+  Edit2,
 } from 'lucide-react';
 
 const VisualEditorElement = ({
@@ -24,10 +25,15 @@ const VisualEditorElement = ({
   onCreateAnchor,
   onSetReference,
   onRemoveReference,
+  onEditAnchor,
+  onRemoveAnchor,
   anchors = {},
+  references = [],
   showMetadata = true,
 }) => {
   const [newAnchorName, setNewAnchorName] = useState('');
+  const [editingAnchor, setEditingAnchor] = useState(false);
+  const [editAnchorName, setEditAnchorName] = useState('');
 
   // Common dropdown options
   const getFieldOptions = (key) => {
@@ -215,7 +221,7 @@ const VisualEditorElement = ({
                     🗑️ Remove Reference
                   </option>
                   {Object.keys(anchors)
-                    .filter((name) => name !== item.referenceOf)
+                    .filter((name) => name !== item.referenceOf && name !== item.anchor)
                     .map((anchorName) => (
                       <option key={anchorName} value={anchorName}>
                         *{anchorName}
@@ -233,11 +239,13 @@ const VisualEditorElement = ({
                   }}
                 >
                   <option value="">Set Reference...</option>
-                  {Object.keys(anchors).map((anchorName) => (
-                    <option key={anchorName} value={anchorName}>
-                      *{anchorName}
-                    </option>
-                  ))}
+                  {Object.keys(anchors)
+                    .filter((anchorName) => anchorName !== item.anchor)
+                    .map((anchorName) => (
+                      <option key={anchorName} value={anchorName}>
+                        *{anchorName}
+                      </option>
+                    ))}
                 </select>
               )}
             </div>
@@ -283,11 +291,57 @@ const VisualEditorElement = ({
             </div>
 
             {/* Metadata badges */}
-            {showMetadata && hasAnchor && (
+            {showMetadata && hasAnchor && !editingAnchor && (
               <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                 <Anchor size={12} />
                 {value.anchor}
               </span>
+            )}
+
+            {showMetadata && hasAnchor && editingAnchor && (
+              <div className="inline-flex items-center gap-1">
+                <input
+                  type="text"
+                  value={editAnchorName}
+                  onChange={(e) => setEditAnchorName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && editAnchorName.trim()) {
+                      onEditAnchor(path, value.anchor, editAnchorName.trim());
+                      setEditingAnchor(false);
+                      setEditAnchorName('');
+                    } else if (e.key === 'Escape') {
+                      setEditingAnchor(false);
+                      setEditAnchorName('');
+                    }
+                  }}
+                  className="px-2 py-1 text-xs border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="New anchor name"
+                  autoFocus
+                />
+                <button
+                  onClick={() => {
+                    if (editAnchorName.trim()) {
+                      onEditAnchor(path, value.anchor, editAnchorName.trim());
+                      setEditingAnchor(false);
+                      setEditAnchorName('');
+                    }
+                  }}
+                  className="p-1 text-green-600 hover:bg-green-50 rounded"
+                  title="Save anchor name"
+                >
+                  <Check size={12} />
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingAnchor(false);
+                    setEditAnchorName('');
+                  }}
+                  className="p-1 text-red-600 hover:bg-red-50 rounded"
+                  title="Cancel"
+                >
+                  <X size={12} />
+                </button>
+              </div>
             )}
 
             {showMetadata && hasReference && (
@@ -300,6 +354,31 @@ const VisualEditorElement = ({
 
           {/* Controls */}
           <div className="flex items-center gap-2">
+            {/* Anchor Management */}
+            {hasAnchor && !isArray && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    setEditingAnchor(true);
+                    setEditAnchorName(value.anchor);
+                  }}
+                  className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                  title="Edit anchor name"
+                >
+                  <Edit2 size={12} />
+                </button>
+                {references.filter((ref) => (ref as { anchorName: string }).anchorName === value.anchor).length === 0 && (
+                  <button
+                    onClick={() => onRemoveAnchor(path)}
+                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                    title="Remove anchor (no references)"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                )}
+              </div>
+            )}
+            
             {/* Anchor Creation */}
             {!hasAnchor && !isArray && (
               <div className="flex items-center gap-1">
@@ -352,7 +431,7 @@ const VisualEditorElement = ({
                       🗑️ Remove Reference
                     </option>
                     {Object.keys(anchors)
-                      .filter((name) => name !== value.referenceOf)
+                      .filter((name) => name !== value.referenceOf && name !== value.anchor)
                       .map((anchorName) => (
                         <option key={anchorName} value={anchorName}>
                           *{anchorName}
@@ -371,11 +450,13 @@ const VisualEditorElement = ({
                       }}
                     >
                       <option value="">Set Reference...</option>
-                      {Object.keys(anchors).map((anchorName) => (
-                        <option key={anchorName} value={anchorName}>
-                          *{anchorName}
-                        </option>
-                      ))}
+                      {Object.keys(anchors)
+                        .filter((anchorName) => anchorName !== value.anchor)
+                        .map((anchorName) => (
+                          <option key={anchorName} value={anchorName}>
+                            *{anchorName}
+                          </option>
+                        ))}
                     </select>
                     <Target size={14} className="text-green-600" />
                   </div>
@@ -449,7 +530,10 @@ const VisualEditorElement = ({
                           onCreateAnchor={onCreateAnchor}
                           onSetReference={onSetReference}
                           onRemoveReference={onRemoveReference}
+                          onEditAnchor={onEditAnchor}
+                          onRemoveAnchor={onRemoveAnchor}
                           anchors={anchors}
+                          references={references}
                           showMetadata={showMetadata}
                         />
                       </div>
@@ -461,7 +545,7 @@ const VisualEditorElement = ({
                       <label className="block text-sm font-medium text-gray-700 capitalize">
                         {subKey.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
                       </label>
-                      {renderFormField(subKey, subValue, `${path}.${subKey}`, (newValue) =>
+                      {renderFormField(subKey, subValue, `${path}.${subKey}`, (newValue: unknown) =>
                         onUpdateData(path, { [subKey]: newValue })
                       )}
                     </div>

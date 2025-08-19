@@ -1,5 +1,4 @@
 import { parseYamlFile, parseYamlString } from './yaml-parser';
-import { generateYamlFromJsonWithMetadata } from './yaml-generator';
 import * as fs from 'fs';
 import * as path from 'path';
 
