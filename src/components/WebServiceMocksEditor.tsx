@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Upload, Download, FileText, Edit3, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Upload, Download, FileText, Edit3, Plus, Trash2, Edit2, Anchor, Link } from 'lucide-react';
 import { useDataContext } from '../context/DataContext';
 import './WebServiceMocksEditor.css';
 
@@ -22,6 +22,7 @@ const WebServiceMocksEditor: React.FC = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
+  // editor textarea state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditServiceModal, setShowEditServiceModal] = useState(false);
   const [showEditMockModal, setShowEditMockModal] = useState(false);
@@ -36,6 +37,8 @@ const WebServiceMocksEditor: React.FC = () => {
     httpStatus: 200,
     response: '{}',
     baseUrl: '',
+    anchor: '',
+    referenceOf: '',
   });
   const [editServiceData, setEditServiceData] = useState({
     webserviceName: '',
@@ -96,8 +99,11 @@ const WebServiceMocksEditor: React.FC = () => {
     }
   }, [isEditing, editContent, mocks, setMocks, setError]);
 
+  // (line numbers removed) simple textarea used for editing
+
   const handleCreateMock = useCallback(() => {
-    const { webserviceName, mockName, httpStatus, response, baseUrl } = newMockData;
+    const { webserviceName, mockName, httpStatus, response, baseUrl, anchor, referenceOf } =
+      newMockData;
 
     if (!webserviceName || !mockName) {
       setError('Webservice name and mock name are required');
@@ -124,10 +130,15 @@ const WebServiceMocksEditor: React.FC = () => {
 
       const service = webservices[webserviceName] as Record<string, unknown>;
       const serviceMocks = (service.mocks as Record<string, unknown>) || {};
-      serviceMocks[mockName] = {
+      const newMock: Record<string, unknown> = {
         http_status: httpStatus,
         response: responseData,
       };
+
+      if (anchor) newMock.anchor = anchor;
+      if (referenceOf) newMock.referenceOf = referenceOf;
+
+      serviceMocks[mockName] = newMock;
       service.mocks = serviceMocks;
 
       setMocks(newMocks);
@@ -138,6 +149,8 @@ const WebServiceMocksEditor: React.FC = () => {
         httpStatus: 200,
         response: '{}',
         baseUrl: '',
+        anchor: '',
+        referenceOf: '',
       });
       setError(null);
     } catch {
@@ -301,8 +314,9 @@ const WebServiceMocksEditor: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-800 service-title">
               {webserviceName}
               {service && typeof service.anchor !== 'undefined' && (
-                <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                  &{String(service.anchor)}
+                <span className="ml-2 inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                  <Anchor size={12} />
+                  {String(service.anchor)}
                 </span>
               )}
             </h3>
@@ -319,6 +333,8 @@ const WebServiceMocksEditor: React.FC = () => {
                   httpStatus: 200,
                   response: '{}',
                   baseUrl: String(service.base_url || ''),
+                  anchor: '',
+                  referenceOf: '',
                 });
                 setShowCreateModal(true);
               }}
@@ -356,13 +372,15 @@ const WebServiceMocksEditor: React.FC = () => {
                       {String(mock.http_status || 200)}
                     </span>
                     {mock && typeof mock.anchor !== 'undefined' && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                        &{String(mock.anchor)}
+                      <span className="px-2 py-1 inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs rounded">
+                        <Anchor size={12} />
+                        {String(mock.anchor)}
                       </span>
                     )}
                     {mock && typeof mock.referenceOf !== 'undefined' && (
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
-                        *{String(mock.referenceOf)}
+                      <span className="px-2 py-1 inline-flex items-center gap-1 bg-green-100 text-green-800 text-xs rounded">
+                        <Link size={12} />
+                        {String(mock.referenceOf)}
                       </span>
                     )}
                   </div>
@@ -399,36 +417,44 @@ const WebServiceMocksEditor: React.FC = () => {
   if (isEditing) {
     return (
       <div className="h-full flex flex-col webservice-editor">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Edit Mocks YAML</h2>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setIsEditing(false)}
-              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleEdit}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Save
-            </button>
+        <div className="max-w-[80%] mx-auto px-4 py-6 w-full">
+          <div className="card p-4 mb-4 flex items-start justify-between">
+            <div className="flex-1 pr-4">
+              <h2 className="text-xl font-bold mb-1">Edit Mocks YAML</h2>
+              <p className="text-sm text-gray-600">
+                Edit the raw YAML/JSON for mocks. Use Save to apply changes to the workspace.
+              </p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEdit}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-sm"
+              >
+                Save
+              </button>
+            </div>
           </div>
+
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            className="edit-textarea"
+            placeholder="Enter mocks JSON/YAML content..."
+          />
         </div>
-        <textarea
-          value={editContent}
-          onChange={(e) => setEditContent(e.target.value)}
-          className="flex-1 p-4 border border-gray-300 rounded font-mono text-sm"
-          placeholder="Enter mocks JSON/YAML content..."
-        />
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col webservice-editor">
-      <div className="max-w-7xl mx-auto px-4 py-6 w-full">
+    <div className="h-full max-w-[80%] flex flex-col webservice-editor">
+      <div className=" mx-auto px-4 py-6 w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">WebService Mocks</h2>
@@ -531,8 +557,9 @@ const WebServiceMocksEditor: React.FC = () => {
                                         {String(response.http_status || 200)}
                                       </span>
                                       {response && typeof response.anchor !== 'undefined' && (
-                                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                                          &{String(response.anchor)}
+                                        <span className="px-2 py-1 inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs rounded">
+                                          <Anchor size={12} />
+                                          {String(response.anchor)}
                                         </span>
                                       )}
                                     </div>
@@ -562,7 +589,7 @@ const WebServiceMocksEditor: React.FC = () => {
       {/* Create Mock Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-90vw">
+          <div className="card bg-white rounded-lg p-6 w-96 max-w-90vw">
             <h3 className="text-lg font-bold mb-4">
               {newMockData.webserviceName &&
               (mocks.webservices as LooseRecord)?.[newMockData.webserviceName]
@@ -621,6 +648,63 @@ const WebServiceMocksEditor: React.FC = () => {
                 />
               </div>
               <div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Anchor (optional)</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={newMockData.anchor || ''}
+                        onChange={(e) => setNewMockData({ ...newMockData, anchor: e.target.value })}
+                        className="flex-1 p-2 border border-gray-300 rounded"
+                        placeholder="e.g., user-success"
+                      />
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center w-10 h-10 border border-gray-200 rounded bg-gray-50"
+                        title="Anchor"
+                        onClick={() => {
+                          // visual affordance: if there's no anchor, generate a simple slug
+                          if (!newMockData.anchor) {
+                            const slug = (newMockData.mockName || 'mock')
+                              .toLowerCase()
+                              .replace(/[^a-z0-9]+/g, '-')
+                              .replace(/(^-|-$)/g, '');
+                            setNewMockData({ ...newMockData, anchor: slug });
+                          }
+                        }}
+                      >
+                        <Anchor size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Reference Of (optional)
+                    </label>
+                    <select
+                      value={newMockData.referenceOf || ''}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '__remove__') {
+                          setNewMockData({ ...newMockData, referenceOf: '' });
+                        } else {
+                          setNewMockData({ ...newMockData, referenceOf: v });
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded bg-white"
+                    >
+                      <option value="">Set Reference...</option>
+                      <option value="__remove__">🗑️ Remove Reference</option>
+                      {Object.keys(mocksAnchors || {}).map((anchorName) => (
+                        <option key={anchorName} value={anchorName}>
+                          *{anchorName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 <label className="block text-sm font-medium mb-1">Response JSON</label>
                 <textarea
                   value={newMockData.response}
@@ -640,15 +724,17 @@ const WebServiceMocksEditor: React.FC = () => {
                     httpStatus: 200,
                     response: '{}',
                     baseUrl: '',
+                    anchor: '',
+                    referenceOf: '',
                   });
                 }}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateMock}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-sm"
               >
                 {newMockData.webserviceName &&
                 (mocks.webservices as Record<string, unknown>)?.[newMockData.webserviceName]
@@ -663,7 +749,7 @@ const WebServiceMocksEditor: React.FC = () => {
       {/* Edit Service Modal */}
       {showEditServiceModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-90vw">
+          <div className="card bg-white rounded-lg p-6 w-96 max-w-90vw">
             <h3 className="text-lg font-bold mb-4">Edit Webservice</h3>
             <div className="space-y-4">
               <div>
@@ -694,13 +780,13 @@ const WebServiceMocksEditor: React.FC = () => {
             <div className="flex justify-end space-x-2 mt-6">
               <button
                 onClick={() => setShowEditServiceModal(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEditWebservice}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-sm"
               >
                 Save
               </button>
@@ -712,7 +798,7 @@ const WebServiceMocksEditor: React.FC = () => {
       {/* Edit Mock Modal */}
       {showEditMockModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-[600px] max-w-90vw">
+          <div className="card bg-white rounded-lg p-6 w-[600px] max-w-90vw">
             <h3 className="text-lg font-bold mb-4">Edit Mock</h3>
             <div className="space-y-4">
               <div>
@@ -739,25 +825,53 @@ const WebServiceMocksEditor: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Anchor (optional)</label>
-                  <input
-                    type="text"
-                    value={editMockData.anchor}
-                    onChange={(e) => setEditMockData({ ...editMockData, anchor: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded"
-                    placeholder="e.g., user-success"
-                  />
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={editMockData.anchor}
+                      onChange={(e) => setEditMockData({ ...editMockData, anchor: e.target.value })}
+                      className="flex-1 p-2 border border-gray-300 rounded"
+                      placeholder="e.g., user-success"
+                    />
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center w-10 h-10 border border-gray-200 rounded bg-gray-50"
+                      title="Anchor"
+                      onClick={() => {
+                        // keep as visual affordance; anchor value is in the input
+                      }}
+                    >
+                      <Anchor size={16} />
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Reference Of (optional)</label>
-                  <input
-                    type="text"
-                    value={editMockData.referenceOf}
-                    onChange={(e) =>
-                      setEditMockData({ ...editMockData, referenceOf: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded"
-                    placeholder="e.g., common-error"
-                  />
+                  <select
+                    value={editMockData.referenceOf || ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === '__remove__') {
+                        setEditMockData({ ...editMockData, referenceOf: '' });
+                      } else {
+                        setEditMockData({ ...editMockData, referenceOf: v });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded bg-white"
+                  >
+                    <option value="">Set Reference...</option>
+                    {editMockData.referenceOf && (
+                      <option value={editMockData.referenceOf}>*{editMockData.referenceOf}</option>
+                    )}
+                    <option value="__remove__">🗑️ Remove Reference</option>
+                    {Object.keys(mocksAnchors || {})
+                      .filter((a) => a !== editMockData.anchor)
+                      .map((anchorName) => (
+                        <option key={anchorName} value={anchorName}>
+                          *{anchorName}
+                        </option>
+                      ))}
+                  </select>
                 </div>
               </div>
               <div>
@@ -773,13 +887,13 @@ const WebServiceMocksEditor: React.FC = () => {
             <div className="flex justify-end space-x-2 mt-6">
               <button
                 onClick={() => setShowEditMockModal(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEditMock}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-sm"
               >
                 Save
               </button>

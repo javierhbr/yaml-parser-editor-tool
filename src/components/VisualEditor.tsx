@@ -265,7 +265,7 @@ const VisualEditorElement = ({
   const hasAnchor = value?.anchor;
 
   return (
-    <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden">
+    <div className="card bg-white border border-gray-200 rounded-lg mb-4 overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-b border-gray-200">
         <div className="flex items-center justify-between">
@@ -367,7 +367,9 @@ const VisualEditorElement = ({
                 >
                   <Edit2 size={12} />
                 </button>
-                {references.filter((ref) => (ref as { anchorName: string }).anchorName === value.anchor).length === 0 && (
+                {references.filter(
+                  (ref) => (ref as { anchorName: string }).anchorName === value.anchor
+                ).length === 0 && (
                   <button
                     onClick={() => onRemoveAnchor(path)}
                     className="p-1 text-red-600 hover:bg-red-50 rounded"
@@ -378,7 +380,7 @@ const VisualEditorElement = ({
                 )}
               </div>
             )}
-            
+
             {/* Anchor Creation */}
             {!hasAnchor && !isArray && (
               <div className="flex items-center gap-1">

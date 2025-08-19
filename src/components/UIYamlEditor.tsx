@@ -1,22 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Upload, Download, Copy, Check, Eye, EyeOff } from 'lucide-react';
 import VisualEditorElement from './VisualEditor';
-import {
-  updateReference,
-  createAnchor,
-} from '../utils/yaml-utils';
+import { updateReference, createAnchor } from '../utils/yaml-utils';
 import { useDataContext } from '../context/DataContext';
 
 const UIYamlEditor: React.FC = () => {
-  const { 
-    data: formData, 
-    setData: setFormData, 
-    allAnchors: anchors, 
-    references, 
-    loadFromFile, 
-    exportYaml 
+  const {
+    data: formData,
+    setData: setFormData,
+    allAnchors: anchors,
+    references,
+    loadFromFile,
+    exportYaml,
   } = useDataContext();
-  
+
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['root']));
   const [yamlOutput, setYamlOutput] = useState('');
   const [copied, setCopied] = useState(false);
@@ -49,72 +46,14 @@ const UIYamlEditor: React.FC = () => {
     });
   }, []);
 
-  const updateData = useCallback((path: string, updates: Record<string, unknown>) => {
-    setFormData((prevData) => {
-      const newData = JSON.parse(JSON.stringify(prevData));
-      const pathParts = path.split('.');
-      let current = newData;
-
-      // Navigate to the target object
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        const key = pathParts[i];
-        if (key.includes('[') && key.includes(']')) {
-          const arrayKey = key.split('[')[0];
-          const index = parseInt(key.split('[')[1].split(']')[0]);
-          current = current[arrayKey][index];
-        } else {
-          current = current[key];
-        }
-      }
-
-      // Apply the update
-      const lastKey = pathParts[pathParts.length - 1];
-      if (lastKey.includes('[') && lastKey.includes(']')) {
-        const arrayKey = lastKey.split('[')[0];
-        const index = parseInt(lastKey.split('[')[1].split(']')[0]);
-        Object.assign(current[arrayKey][index], updates);
-      } else {
-        Object.assign(current[lastKey], updates);
-      }
-
-      return newData;
-    });
-  }, [setFormData]);
-
-  const addItem = useCallback((path: string, itemType: string) => {
-    setFormData((prevData) => {
-      const newData = JSON.parse(JSON.stringify(prevData));
-      const pathParts = path.split('.');
-      let current = newData;
-
-      for (const key of pathParts) {
-        current = current[key];
-      }
-
-      const newItem =
-        itemType === 'user'
-          ? {
-              role: 'guest',
-              timezone: 'UTC',
-              username: `user${current.length + 1}`,
-              notifications: { email: true, sms: false, push: false },
-            }
-          : {};
-
-      current.push(newItem);
-      return newData;
-    });
-  }, [setFormData]);
-
-  const deleteItem = useCallback((path: string) => {
-    setFormData((prevData) => {
-      const newData = JSON.parse(JSON.stringify(prevData));
-      const pathParts = path.split('.');
-
-      if (pathParts.length === 1) {
-        delete newData[pathParts[0]];
-      } else {
+  const updateData = useCallback(
+    (path: string, updates: Record<string, unknown>) => {
+      setFormData((prevData) => {
+        const newData = JSON.parse(JSON.stringify(prevData));
+        const pathParts = path.split('.');
         let current = newData;
+
+        // Navigate to the target object
         for (let i = 0; i < pathParts.length - 1; i++) {
           const key = pathParts[i];
           if (key.includes('[') && key.includes(']')) {
@@ -126,19 +65,86 @@ const UIYamlEditor: React.FC = () => {
           }
         }
 
+        // Apply the update
         const lastKey = pathParts[pathParts.length - 1];
         if (lastKey.includes('[') && lastKey.includes(']')) {
           const arrayKey = lastKey.split('[')[0];
           const index = parseInt(lastKey.split('[')[1].split(']')[0]);
-          current[arrayKey].splice(index, 1);
+          Object.assign(current[arrayKey][index], updates);
         } else {
-          delete current[lastKey];
+          Object.assign(current[lastKey], updates);
         }
-      }
 
-      return newData;
-    });
-  }, [setFormData]);
+        return newData;
+      });
+    },
+    [setFormData]
+  );
+
+  const addItem = useCallback(
+    (path: string, itemType: string) => {
+      setFormData((prevData) => {
+        const newData = JSON.parse(JSON.stringify(prevData));
+        const pathParts = path.split('.');
+        let current = newData;
+
+        for (const key of pathParts) {
+          current = current[key];
+        }
+
+        const newItem =
+          itemType === 'user'
+            ? {
+                role: 'guest',
+                timezone: 'UTC',
+                username: `user${current.length + 1}`,
+                notifications: { email: true, sms: false, push: false },
+              }
+            : {};
+
+        current.push(newItem);
+        return newData;
+      });
+    },
+    [setFormData]
+  );
+
+  const deleteItem = useCallback(
+    (path: string) => {
+      setFormData((prevData) => {
+        const newData = JSON.parse(JSON.stringify(prevData));
+        const pathParts = path.split('.');
+
+        if (pathParts.length === 1) {
+          delete newData[pathParts[0]];
+        } else {
+          let current = newData;
+          for (let i = 0; i < pathParts.length - 1; i++) {
+            const key = pathParts[i];
+            if (key.includes('[') && key.includes(']')) {
+              const arrayKey = key.split('[')[0];
+              const index = parseInt(key.split('[')[1].split(']')[0]);
+              current = current[arrayKey][index];
+            } else {
+              current = current[key];
+            }
+          }
+
+          const lastKey = pathParts[pathParts.length - 1];
+          if (lastKey.includes('[') && lastKey.includes(']')) {
+            const arrayKey = lastKey.split('[')[0];
+            const index = parseInt(lastKey.split('[')[1].split(']')[0]);
+            current[arrayKey].splice(index, 1);
+          } else {
+            delete current[lastKey];
+          }
+        }
+
+        return newData;
+      });
+    },
+    [setFormData]
+  );
 
   const handleCreateAnchor = useCallback(
     (path: string, anchorName: string) => {
@@ -156,116 +162,125 @@ const UIYamlEditor: React.FC = () => {
     [formData, anchors, setFormData]
   );
 
-  const handleRemoveReference = useCallback((path: string) => {
-    setFormData((prevData) => {
-      const newData = JSON.parse(JSON.stringify(prevData));
-      const pathParts = path.split('.');
-      let current = newData;
+  const handleRemoveReference = useCallback(
+    (path: string) => {
+      setFormData((prevData) => {
+        const newData = JSON.parse(JSON.stringify(prevData));
+        const pathParts = path.split('.');
+        let current = newData;
 
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        const key = pathParts[i];
-        if (key.includes('[') && key.includes(']')) {
-          const arrayKey = key.split('[')[0];
-          const index = parseInt(key.split('[')[1].split(']')[0]);
-          current = current[arrayKey][index];
-        } else {
-          current = current[key];
-        }
-      }
-
-      const lastKey = pathParts[pathParts.length - 1];
-      if (lastKey.includes('[') && lastKey.includes(']')) {
-        const arrayKey = lastKey.split('[')[0];
-        const index = parseInt(lastKey.split('[')[1].split(']')[0]);
-        delete current[arrayKey][index].referenceOf;
-      } else {
-        delete current[lastKey].referenceOf;
-      }
-
-      return newData;
-    });
-  }, [setFormData]);
-
-  const handleEditAnchor = useCallback((path: string, oldAnchorName: string, newAnchorName: string) => {
-    setFormData((prevData) => {
-      const newData = JSON.parse(JSON.stringify(prevData));
-      
-      // Update the anchor name at the specified path
-      const pathParts = path.split('.');
-      let current = newData;
-      
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        const key = pathParts[i];
-        if (key.includes('[') && key.includes(']')) {
-          const arrayKey = key.split('[')[0];
-          const index = parseInt(key.split('[')[1].split(']')[0]);
-          current = current[arrayKey][index];
-        } else {
-          current = current[key];
-        }
-      }
-      
-      const lastKey = pathParts[pathParts.length - 1];
-      if (lastKey.includes('[') && lastKey.includes(']')) {
-        const arrayKey = lastKey.split('[')[0];
-        const index = parseInt(lastKey.split('[')[1].split(']')[0]);
-        current[arrayKey][index].anchor = newAnchorName;
-      } else {
-        current[lastKey].anchor = newAnchorName;
-      }
-      
-      // Update all references to use the new anchor name
-      const updateReferences = (obj: unknown): unknown => {
-        if (Array.isArray(obj)) {
-          return obj.map(updateReferences);
-        } else if (obj && typeof obj === 'object') {
-          const newObj = { ...obj };
-          if (newObj.referenceOf === oldAnchorName) {
-            newObj.referenceOf = newAnchorName;
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          const key = pathParts[i];
+          if (key.includes('[') && key.includes(']')) {
+            const arrayKey = key.split('[')[0];
+            const index = parseInt(key.split('[')[1].split(']')[0]);
+            current = current[arrayKey][index];
+          } else {
+            current = current[key];
           }
-          Object.keys(newObj).forEach(key => {
-            if (key !== 'anchor' && key !== 'referenceOf') {
-              newObj[key] = updateReferences(newObj[key]);
-            }
-          });
-          return newObj;
         }
-        return obj;
-      };
-      
-      return updateReferences(newData);
-    });
-  }, [setFormData]);
 
-  const handleRemoveAnchor = useCallback((path: string) => {
-    setFormData((prevData) => {
-      const newData = JSON.parse(JSON.stringify(prevData));
-      const pathParts = path.split('.');
-      let current = newData;
-      
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        const key = pathParts[i];
-        if (key.includes('[') && key.includes(']')) {
-          const arrayKey = key.split('[')[0];
-          const index = parseInt(key.split('[')[1].split(']')[0]);
-          current = current[arrayKey][index];
+        const lastKey = pathParts[pathParts.length - 1];
+        if (lastKey.includes('[') && lastKey.includes(']')) {
+          const arrayKey = lastKey.split('[')[0];
+          const index = parseInt(lastKey.split('[')[1].split(']')[0]);
+          delete current[arrayKey][index].referenceOf;
         } else {
-          current = current[key];
+          delete current[lastKey].referenceOf;
         }
-      }
-      
-      const lastKey = pathParts[pathParts.length - 1];
-      if (lastKey.includes('[') && lastKey.includes(']')) {
-        const arrayKey = lastKey.split('[')[0];
-        const index = parseInt(lastKey.split('[')[1].split(']')[0]);
-        delete current[arrayKey][index].anchor;
-      } else {
-        delete current[lastKey].anchor;
-      }
-      
-      return newData;
-    });
-  }, [setFormData]);
+
+        return newData;
+      });
+    },
+    [setFormData]
+  );
+
+  const handleEditAnchor = useCallback(
+    (path: string, oldAnchorName: string, newAnchorName: string) => {
+      setFormData((prevData) => {
+        const newData = JSON.parse(JSON.stringify(prevData));
+
+        // Update the anchor name at the specified path
+        const pathParts = path.split('.');
+        let current = newData;
+
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          const key = pathParts[i];
+          if (key.includes('[') && key.includes(']')) {
+            const arrayKey = key.split('[')[0];
+            const index = parseInt(key.split('[')[1].split(']')[0]);
+            current = current[arrayKey][index];
+          } else {
+            current = current[key];
+          }
+        }
+
+        const lastKey = pathParts[pathParts.length - 1];
+        if (lastKey.includes('[') && lastKey.includes(']')) {
+          const arrayKey = lastKey.split('[')[0];
+          const index = parseInt(lastKey.split('[')[1].split(']')[0]);
+          current[arrayKey][index].anchor = newAnchorName;
+        } else {
+          current[lastKey].anchor = newAnchorName;
+        }
+
+        // Update all references to use the new anchor name
+        const updateReferences = (obj: unknown): unknown => {
+          if (Array.isArray(obj)) {
+            return obj.map(updateReferences);
+          } else if (obj && typeof obj === 'object') {
+            const newObj = { ...obj };
+            if (newObj.referenceOf === oldAnchorName) {
+              newObj.referenceOf = newAnchorName;
+            }
+            Object.keys(newObj).forEach((key) => {
+              if (key !== 'anchor' && key !== 'referenceOf') {
+                newObj[key] = updateReferences(newObj[key]);
+              }
+            });
+            return newObj;
+          }
+          return obj;
+        };
+
+        return updateReferences(newData);
+      });
+    },
+    [setFormData]
+  );
+
+  const handleRemoveAnchor = useCallback(
+    (path: string) => {
+      setFormData((prevData) => {
+        const newData = JSON.parse(JSON.stringify(prevData));
+        const pathParts = path.split('.');
+        let current = newData;
+
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          const key = pathParts[i];
+          if (key.includes('[') && key.includes(']')) {
+            const arrayKey = key.split('[')[0];
+            const index = parseInt(key.split('[')[1].split(']')[0]);
+            current = current[arrayKey][index];
+          } else {
+            current = current[key];
+          }
+        }
+
+        const lastKey = pathParts[pathParts.length - 1];
+        if (lastKey.includes('[') && lastKey.includes(']')) {
+          const arrayKey = lastKey.split('[')[0];
+          const index = parseInt(lastKey.split('[')[1].split(']')[0]);
+          delete current[arrayKey][index].anchor;
+        } else {
+          delete current[lastKey].anchor;
+        }
+
+        return newData;
+      });
+    },
+    [setFormData]
+  );
 
   // Generate YAML output
   useEffect(() => {
@@ -358,7 +373,7 @@ const UIYamlEditor: React.FC = () => {
   return (
     <div className="h-screen bg-gray-50">
       <div className="h-full max-w-7xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow-sm border h-full flex flex-col">
+        <div className="card bg-white rounded-lg shadow-sm border h-full flex flex-col">
           {/* Toolbar */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div>
@@ -438,9 +453,7 @@ const UIYamlEditor: React.FC = () => {
                       Load a YAML or JSON file to start editing, or the component will use sample
                       data.
                     </p>
-                    <p className="text-sm text-gray-500">
-                      Sample data is loaded by default
-                    </p>
+                    <p className="text-sm text-gray-500">Sample data is loaded by default</p>
                   </div>
                 )}
               </div>
