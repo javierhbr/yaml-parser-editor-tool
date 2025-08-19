@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { Upload, Download, FileText, Eye, EyeOff, Copy } from 'lucide-react';
+import { Upload, Download, FileText, Eye, EyeOff, Copy, Edit3, Save, X } from 'lucide-react';
 import AnchorManager from './components/AnchorManager';
 import TreeNode from './components/TreeNode';
 import EditReferenceModal from './components/EditReferenceModal';
@@ -97,6 +97,8 @@ const YAMLAnchorEditor: React.FC = () => {
   const [yamlOutput, setYamlOutput] = useState('');
   const [scopeDoc, setScopeDoc] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editableYaml, setEditableYaml] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const anchors = useMemo(() => findAnchors(data), [data]);
@@ -188,6 +190,31 @@ const YAMLAnchorEditor: React.FC = () => {
     setCreatingAnchor(null);
   };
 
+  const handleEnterEditMode = () => {
+    const currentYaml = generateYamlFromJsonWithMetadata(data);
+    setEditableYaml(currentYaml);
+    setIsEditMode(true);
+    setActiveTab('yaml');
+  };
+
+  const handleSaveEdit = () => {
+    try {
+      const newData = parseYamlString(editableYaml);
+      setData(newData);
+      setIsEditMode(false);
+      setActiveTab('tree');
+      setError(null);
+    } catch (err) {
+      setError(`Error parsing YAML: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditableYaml('');
+    setActiveTab('tree');
+  };
+
   const renderValue = useCallback((value: any, key: string, path: string, depth: number = 0): React.ReactNode => {
     return (
       <TreeNode
@@ -206,68 +233,92 @@ const YAMLAnchorEditor: React.FC = () => {
   }, [expandedNodes, showMetadata, toggleNode]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+    <div className="bg-gray-50 min-h-screen">
+      {/* Toolbar */}
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">YAML Anchor & Reference Editor</h1>
-              <p className="text-gray-600 mt-1">Visualize and manage YAML anchors (&) and references (*)</p>
+            <div className="flex items-center gap-4 text-sm text-gray-600">
+              <span className="inline-flex items-center gap-1">
+                <FileText size={14} />
+                {uploadedFileName}
+              </span>
+              <span>{Object.keys(anchors).length} anchors</span>
+              <span>{references.length} references</span>
             </div>
             
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowMetadata(!showMetadata)}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  showMetadata 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {showMetadata ? <Eye size={16} /> : <EyeOff size={16} />}
-                {showMetadata ? 'Hide' : 'Show'} Metadata
-              </button>
-              
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".yaml,.yml,.json"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              
-              <button
-                onClick={() => {
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
-                    fileInputRef.current.click();
-                  }
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <Upload size={16} />
-                Upload File
-              </button>
-              
-              <button
-                onClick={exportToYAML}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              >
-                <Download size={16} />
-                Export YAML
-              </button>
+              {!isEditMode ? (
+                <>
+                  <button
+                    onClick={() => setShowMetadata(!showMetadata)}
+                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      showMetadata 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {showMetadata ? <Eye size={16} /> : <EyeOff size={16} />}
+                    {showMetadata ? 'Hide' : 'Show'} Metadata
+                  </button>
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".yaml,.yml,.json"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  
+                  <button
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    <Upload size={16} />
+                    Upload File
+                  </button>
+
+                  <button
+                    onClick={handleEnterEditMode}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
+                  >
+                    <Edit3 size={16} />
+                    Edit YAML
+                  </button>
+                  
+                  <button
+                    onClick={exportToYAML}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    <Download size={16} />
+                    Export YAML
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleSaveEdit}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    <Save size={16} />
+                    Save & Reload
+                  </button>
+                  
+                  <button
+                    onClick={handleCancelEdit}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                  >
+                    <X size={16} />
+                    Cancel
+                  </button>
+                </>
+              )}
             </div>
-          </div>
-          
-          {/* File info */}
-          <div className="mt-3 flex items-center gap-4 text-sm text-gray-600">
-            <span className="inline-flex items-center gap-1">
-              <FileText size={14} />
-              {uploadedFileName}
-            </span>
-            <span>{Object.keys(anchors).length} anchors</span>
-            <span>{references.length} references</span>
           </div>
         </div>
       </div>
@@ -336,18 +387,48 @@ const YAMLAnchorEditor: React.FC = () => {
                 {activeTab === 'yaml' && (
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Generated YAML</h3>
-                      <button
-                        onClick={() => copyToClipboard(yamlOutput)}
-                        className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                      >
-                        <Copy size={14} />
-                        Copy
-                      </button>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {isEditMode ? 'Edit YAML Source' : 'Generated YAML'}
+                      </h3>
+                      {!isEditMode && (
+                        <button
+                          onClick={() => copyToClipboard(yamlOutput)}
+                          className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                        >
+                          <Copy size={14} />
+                          Copy
+                        </button>
+                      )}
                     </div>
-                    <pre className="bg-gray-50 p-4 rounded-lg text-sm font-mono overflow-x-auto border">
-                      {yamlOutput || 'Click "Generate YAML" to see output'}
-                    </pre>
+                    {isEditMode ? (
+                      <div className="space-y-4">
+                        <textarea
+                          value={editableYaml}
+                          onChange={(e) => setEditableYaml(e.target.value)}
+                          className="w-full h-96 p-4 font-mono text-sm border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Edit your YAML content here..."
+                          spellCheck={false}
+                        />
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={handleCancelEdit}
+                            className="px-4 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleSaveEdit}
+                            className="px-4 py-2 text-sm text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+                          >
+                            Save & Reload Data
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <pre className="bg-gray-50 p-4 rounded-lg text-sm font-mono overflow-x-auto border">
+                        {yamlOutput || 'Click "Generate YAML" to see output'}
+                      </pre>
+                    )}
                   </div>
                 )}
 
