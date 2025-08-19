@@ -1,6 +1,10 @@
 import React, { useCallback, useState } from 'react';
 import { Upload, Download, FileText, Edit3, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useDataContext } from '../context/DataContext';
+import './WebServiceMocksEditor.css';
+
+// Small local helper type for incoming YAML-parsed objects
+type LooseRecord = Record<string, unknown>;
 
 const WebServiceMocksEditor: React.FC = () => {
   const {
@@ -22,7 +26,10 @@ const WebServiceMocksEditor: React.FC = () => {
   const [showEditServiceModal, setShowEditServiceModal] = useState(false);
   const [showEditMockModal, setShowEditMockModal] = useState(false);
   const [editingWebservice, setEditingWebservice] = useState<string>('');
-  const [editingMock, setEditingMock] = useState<{webserviceName: string, mockName: string}>({webserviceName: '', mockName: ''});
+  const [editingMock, setEditingMock] = useState<{ webserviceName: string; mockName: string }>({
+    webserviceName: '',
+    mockName: '',
+  });
   const [newMockData, setNewMockData] = useState({
     webserviceName: '',
     mockName: '',
@@ -91,7 +98,7 @@ const WebServiceMocksEditor: React.FC = () => {
 
   const handleCreateMock = useCallback(() => {
     const { webserviceName, mockName, httpStatus, response, baseUrl } = newMockData;
-    
+
     if (!webserviceName || !mockName) {
       setError('Webservice name and mock name are required');
       return;
@@ -100,23 +107,23 @@ const WebServiceMocksEditor: React.FC = () => {
     try {
       const responseData = JSON.parse(response);
       const newMocks = { ...mocks };
-      
+
       // Ensure webservices structure exists
       if (!newMocks.webservices) {
         newMocks.webservices = {};
       }
-      
+
       const webservices = newMocks.webservices as Record<string, unknown>;
-      
+
       if (!webservices[webserviceName]) {
         webservices[webserviceName] = {
           base_url: baseUrl || 'https://api.example.com',
-          mocks: {}
+          mocks: {},
         };
       }
 
       const service = webservices[webserviceName] as Record<string, unknown>;
-      const serviceMocks = service.mocks as Record<string, unknown> || {};
+      const serviceMocks = (service.mocks as Record<string, unknown>) || {};
       serviceMocks[mockName] = {
         http_status: httpStatus,
         response: responseData,
@@ -138,40 +145,43 @@ const WebServiceMocksEditor: React.FC = () => {
     }
   }, [newMockData, mocks, setMocks, setError]);
 
-  const handleEditWebservice = useCallback((webserviceName: string) => {
-    const webservices = mocks.webservices as Record<string, unknown> || {};
-    const service = webservices[webserviceName] as Record<string, unknown> || {};
-    
-    setEditServiceData({
-      webserviceName,
-      baseUrl: String(service.base_url || ''),
-    });
-    setEditingWebservice(webserviceName);
-    setShowEditServiceModal(true);
-  }, [mocks]);
+  const handleEditWebservice = useCallback(
+    (webserviceName: string) => {
+      const webservices = (mocks.webservices as Record<string, unknown>) || {};
+      const service = (webservices[webserviceName] as Record<string, unknown>) || {};
+
+      setEditServiceData({
+        webserviceName,
+        baseUrl: String(service.base_url || ''),
+      });
+      setEditingWebservice(webserviceName);
+      setShowEditServiceModal(true);
+    },
+    [mocks]
+  );
 
   const handleSaveEditWebservice = useCallback(() => {
     const { webserviceName, baseUrl } = editServiceData;
-    
+
     if (!webserviceName) {
       setError('Webservice name is required');
       return;
     }
 
     const newMocks = { ...mocks };
-    
+
     if (!newMocks.webservices) {
       newMocks.webservices = {};
     }
-    
+
     const webservices = newMocks.webservices as Record<string, unknown>;
-    const oldService = webservices[editingWebservice] as Record<string, unknown> || {};
-    
+    const oldService = (webservices[editingWebservice] as Record<string, unknown>) || {};
+
     // If webservice name changed, move the service
     if (editingWebservice !== webserviceName) {
       delete webservices[editingWebservice];
     }
-    
+
     webservices[webserviceName] = {
       ...oldService,
       base_url: baseUrl,
@@ -183,36 +193,46 @@ const WebServiceMocksEditor: React.FC = () => {
     setError(null);
   }, [editServiceData, editingWebservice, mocks, setMocks, setError]);
 
-  const handleRemoveWebservice = useCallback((webserviceName: string) => {
-    if (confirm(`Are you sure you want to remove the webservice '${webserviceName}' and all its mocks?`)) {
-      const newMocks = { ...mocks };
-      const webservices = newMocks.webservices as Record<string, unknown> || {};
-      delete webservices[webserviceName];
-      setMocks(newMocks);
-    }
-  }, [mocks, setMocks]);
+  const handleRemoveWebservice = useCallback(
+    (webserviceName: string) => {
+      if (
+        confirm(
+          `Are you sure you want to remove the webservice '${webserviceName}' and all its mocks?`
+        )
+      ) {
+        const newMocks = { ...mocks };
+        const webservices = (newMocks.webservices as Record<string, unknown>) || {};
+        delete webservices[webserviceName];
+        setMocks(newMocks);
+      }
+    },
+    [mocks, setMocks]
+  );
 
-  const handleEditMock = useCallback((webserviceName: string, mockName: string) => {
-    const webservices = mocks.webservices as Record<string, unknown> || {};
-    const service = webservices[webserviceName] as Record<string, unknown> || {};
-    const serviceMocks = service.mocks as Record<string, unknown> || {};
-    const mock = serviceMocks[mockName] as Record<string, unknown> || {};
-    
-    setEditMockData({
-      mockName,
-      httpStatus: Number(mock.http_status) || 200,
-      response: JSON.stringify(mock.response || {}, null, 2),
-      anchor: String(mock.anchor || ''),
-      referenceOf: String(mock.referenceOf || ''),
-    });
-    setEditingMock({ webserviceName, mockName });
-    setShowEditMockModal(true);
-  }, [mocks]);
+  const handleEditMock = useCallback(
+    (webserviceName: string, mockName: string) => {
+      const webservices = (mocks.webservices as Record<string, unknown>) || {};
+      const service = (webservices[webserviceName] as Record<string, unknown>) || {};
+      const serviceMocks = (service.mocks as Record<string, unknown>) || {};
+      const mock = (serviceMocks[mockName] as Record<string, unknown>) || {};
+
+      setEditMockData({
+        mockName,
+        httpStatus: Number(mock.http_status) || 200,
+        response: JSON.stringify(mock.response || {}, null, 2),
+        anchor: String(mock.anchor || ''),
+        referenceOf: String(mock.referenceOf || ''),
+      });
+      setEditingMock({ webserviceName, mockName });
+      setShowEditMockModal(true);
+    },
+    [mocks]
+  );
 
   const handleSaveEditMock = useCallback(() => {
     const { mockName, httpStatus, response, anchor, referenceOf } = editMockData;
     const { webserviceName } = editingMock;
-    
+
     if (!mockName) {
       setError('Mock name is required');
       return;
@@ -221,23 +241,23 @@ const WebServiceMocksEditor: React.FC = () => {
     try {
       const responseData = JSON.parse(response);
       const newMocks = { ...mocks };
-      const webservices = newMocks.webservices as Record<string, unknown> || {};
-      const service = webservices[webserviceName] as Record<string, unknown> || {};
-      const serviceMocks = service.mocks as Record<string, unknown> || {};
-      
+      const webservices = (newMocks.webservices as Record<string, unknown>) || {};
+      const service = (webservices[webserviceName] as Record<string, unknown>) || {};
+      const serviceMocks = (service.mocks as Record<string, unknown>) || {};
+
       // If mock name changed, remove old one
       if (editingMock.mockName !== mockName) {
         delete serviceMocks[editingMock.mockName];
       }
-      
+
       const newMock: Record<string, unknown> = {
         http_status: httpStatus,
         response: responseData,
       };
-      
+
       if (anchor) newMock.anchor = anchor;
       if (referenceOf) newMock.referenceOf = referenceOf;
-      
+
       serviceMocks[mockName] = newMock;
       service.mocks = serviceMocks;
       webservices[webserviceName] = service;
@@ -252,30 +272,35 @@ const WebServiceMocksEditor: React.FC = () => {
     }
   }, [editMockData, editingMock, mocks, setMocks, setError]);
 
-  const handleRemoveMock = useCallback((webserviceName: string, mockName: string) => {
-    if (confirm(`Are you sure you want to remove the mock '${mockName}' from '${webserviceName}'?`)) {
-      const newMocks = { ...mocks };
-      const webservices = newMocks.webservices as Record<string, unknown> || {};
-      const service = webservices[webserviceName] as Record<string, unknown> || {};
-      const serviceMocks = service.mocks as Record<string, unknown> || {};
-      delete serviceMocks[mockName];
-      service.mocks = serviceMocks;
-      webservices[webserviceName] = service;
-      setMocks(newMocks);
-    }
-  }, [mocks, setMocks]);
+  const handleRemoveMock = useCallback(
+    (webserviceName: string, mockName: string) => {
+      if (
+        confirm(`Are you sure you want to remove the mock '${mockName}' from '${webserviceName}'?`)
+      ) {
+        const newMocks = { ...mocks };
+        const webservices = (newMocks.webservices as Record<string, unknown>) || {};
+        const service = (webservices[webserviceName] as Record<string, unknown>) || {};
+        const serviceMocks = (service.mocks as Record<string, unknown>) || {};
+        delete serviceMocks[mockName];
+        service.mocks = serviceMocks;
+        webservices[webserviceName] = service;
+        setMocks(newMocks);
+      }
+    },
+    [mocks, setMocks]
+  );
 
   const renderMockService = (webserviceName: string, serviceData: unknown) => {
-    const service = serviceData as Record<string, unknown>;
-    const serviceMocks = service.mocks as Record<string, unknown> || {};
+    const service = serviceData as LooseRecord;
+    const serviceMocks = (service.mocks as Record<string, unknown>) || {};
 
     return (
-      <div key={webserviceName} className="border border-gray-300 rounded-lg p-4 mb-4">
+      <div key={webserviceName} className="card w-full border border-gray-300 rounded-lg p-4 mb-4">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">
+            <h3 className="text-lg font-semibold text-gray-800 service-title">
               {webserviceName}
-              {service.anchor && (
+              {service && typeof service.anchor !== 'undefined' && (
                 <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
                   &{String(service.anchor)}
                 </span>
@@ -297,21 +322,21 @@ const WebServiceMocksEditor: React.FC = () => {
                 });
                 setShowCreateModal(true);
               }}
-              className="p-2 text-green-600 hover:bg-green-50 rounded"
+              className="service-btn service-btn-add"
               title="Add Mock"
             >
               <Plus size={16} />
             </button>
             <button
               onClick={() => handleEditWebservice(webserviceName)}
-              className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+              className="service-btn service-btn-edit"
               title="Edit Webservice"
             >
               <Edit2 size={16} />
             </button>
             <button
               onClick={() => handleRemoveWebservice(webserviceName)}
-              className="p-2 text-red-600 hover:bg-red-50 rounded"
+              className="service-btn service-btn-remove"
               title="Remove Webservice"
             >
               <Trash2 size={16} />
@@ -321,7 +346,7 @@ const WebServiceMocksEditor: React.FC = () => {
 
         <div className="space-y-2">
           {Object.entries(serviceMocks).map(([mockName, mockData]) => {
-            const mock = mockData as Record<string, unknown>;
+            const mock = mockData as LooseRecord;
             return (
               <div key={mockName} className="bg-gray-50 p-3 rounded border-l-4 border-green-400">
                 <div className="flex items-center justify-between mb-2">
@@ -330,12 +355,12 @@ const WebServiceMocksEditor: React.FC = () => {
                     <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
                       {String(mock.http_status || 200)}
                     </span>
-                    {mock.anchor && (
+                    {mock && typeof mock.anchor !== 'undefined' && (
                       <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
                         &{String(mock.anchor)}
                       </span>
                     )}
-                    {mock.referenceOf && (
+                    {mock && typeof mock.referenceOf !== 'undefined' && (
                       <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
                         *{String(mock.referenceOf)}
                       </span>
@@ -359,7 +384,7 @@ const WebServiceMocksEditor: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-sm text-gray-600">
-                  <pre className="whitespace-pre-wrap bg-white p-2 rounded border">
+                  <pre className="whitespace-pre-wrap bg-white p-2 rounded border mock-row">
                     {JSON.stringify(mock.response || {}, null, 2)}
                   </pre>
                 </div>
@@ -373,7 +398,7 @@ const WebServiceMocksEditor: React.FC = () => {
 
   if (isEditing) {
     return (
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col webservice-editor">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Edit Mocks YAML</h2>
           <div className="flex items-center space-x-2">
@@ -402,146 +427,167 @@ const WebServiceMocksEditor: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">WebService Mocks</h2>
-        <div className="flex items-center space-x-2">
-          <input
-            type="file"
-            id="mocks-file-upload"
-            accept=".yaml,.yml,.json"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-          <label
-            htmlFor="mocks-file-upload"
-            className="flex items-center space-x-1 px-3 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600"
-          >
-            <Upload size={16} />
-            <span>Import</span>
-          </label>
-          <button
-            onClick={downloadYaml}
-            className="flex items-center space-x-1 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            <Download size={16} />
-            <span>Export</span>
-          </button>
-          <button
-            onClick={handleEdit}
-            className="flex items-center space-x-1 px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-          >
-            <Edit3 size={16} />
-            <span>Edit</span>
-          </button>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center space-x-1 px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
-          >
-            <Plus size={16} />
-            <span>Create Mock</span>
-          </button>
-        </div>
-      </div>
-
-      {/* File Info */}
-      <div className="mb-4 flex items-center space-x-4 text-sm text-gray-600">
-        <div className="flex items-center space-x-1">
-          <FileText size={16} />
-          <span>{mocksFileName}</span>
-        </div>
-        <div>Anchors: {Object.keys(mocksAnchors).length}</div>
-        <div>References: {mocksReferences.length}</div>
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      {/* Mocks Content */}
-      <div className="flex-1 overflow-auto">
-        {Object.keys(mocks).length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <FileText size={48} className="mx-auto mb-4 opacity-50" />
-            <p>No mocks loaded. Import a YAML file or create new mocks.</p>
+    <div className="h-full flex flex-col webservice-editor">
+      <div className="max-w-7xl mx-auto px-4 py-6 w-full">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">WebService Mocks</h2>
+          <div className="flex items-center space-x-2 header-actions">
+            <input
+              type="file"
+              id="mocks-file-upload"
+              accept=".yaml,.yml,.json"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <label htmlFor="mocks-file-upload" className="btn btn-import">
+              <Upload size={16} />
+              <span>Import</span>
+            </label>
+            <button onClick={downloadYaml} className="btn btn-export">
+              <Download size={16} />
+              <span>Export</span>
+            </button>
+            <button
+              onClick={handleEdit}
+              className="btn btn-edit"
+              disabled={Object.keys(mocks).length === 0}
+            >
+              <Edit3 size={16} />
+              <span>Edit</span>
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="btn btn-create"
+              disabled={Object.keys(mocks).length === 0}
+            >
+              <Plus size={16} />
+              <span>Create Mock</span>
+            </button>
           </div>
-        ) : (
-          <div>
-            {Object.entries(mocks).map(([categoryName, categoryData]) => {
-              // Handle both flat structure and nested structure
-              if (categoryName === 'webservices' || categoryName === 'services') {
-                // Nested structure: webservices -> webservice -> mocks
-                const webservices = categoryData as Record<string, unknown>;
-                return Object.entries(webservices).map(([webserviceName, serviceData]) =>
-                  renderMockService(webserviceName, serviceData)
-                );
-              } else if (categoryName === 'common_responses' || categoryName === 'shared' || categoryName === 'common') {
-                // Common responses section
-                return (
-                  <div key={categoryName} className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">
-                      Common Responses
-                    </h3>
-                    <div className="space-y-2">
-                      {Object.entries(categoryData as Record<string, unknown>).map(([responseName, responseData]) => {
-                        const response = responseData as Record<string, unknown>;
-                        return (
-                          <div key={responseName} className="bg-gray-50 p-3 rounded border-l-4 border-purple-400">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium text-gray-700">{responseName}</span>
-                              <div className="flex items-center space-x-2">
-                                <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
-                                  {String(response.http_status || 200)}
-                                </span>
-                                {response.anchor && (
-                                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                                    &{String(response.anchor)}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              <pre className="whitespace-pre-wrap bg-white p-2 rounded border text-xs">
-                                {JSON.stringify(response.response || {}, null, 2)}
-                              </pre>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              } else {
-                // Flat structure: assume it's a service directly
-                return renderMockService(categoryName, categoryData);
-              }
-            }).flat()}
+        </div>
+
+        {/* File Info */}
+        <div className="mb-4 flex items-center space-x-4 text-sm text-gray-600">
+          <div className="flex items-center space-x-1">
+            <FileText size={16} />
+            <span>{mocksFileName}</span>
+          </div>
+          <div>Anchors: {Object.keys(mocksAnchors).length}</div>
+          <div>References: {mocksReferences.length}</div>
+        </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
+            {error}
           </div>
         )}
-      </div>
 
+        {/* Mocks Content */}
+        <div className="flex-1 overflow-auto">
+          {Object.keys(mocks).length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <FileText size={48} className="mx-auto mb-4 opacity-50" />
+              <p>No mocks loaded. Import a YAML file or create new mocks.</p>
+            </div>
+          ) : (
+            <div>
+              {Object.entries(mocks)
+                .map(([categoryName, categoryData]) => {
+                  // Handle both flat structure and nested structure
+                  if (categoryName === 'webservices' || categoryName === 'services') {
+                    // Nested structure: webservices -> webservice -> mocks
+                    const webservices = categoryData as Record<string, unknown>;
+                    return Object.entries(webservices).map(([webserviceName, serviceData]) =>
+                      renderMockService(webserviceName, serviceData)
+                    );
+                  } else if (
+                    categoryName === 'common_responses' ||
+                    categoryName === 'shared' ||
+                    categoryName === 'common'
+                  ) {
+                    // Common responses section
+                    return (
+                      <div key={categoryName} className="mb-6">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">
+                          Common Responses
+                        </h3>
+                        <div className="space-y-2">
+                          {Object.entries(categoryData as Record<string, unknown>).map(
+                            ([responseName, responseData]) => {
+                              const response = responseData as LooseRecord;
+                              return (
+                                <div
+                                  key={responseName}
+                                  className="card w-full border border-gray-300 rounded-lg p-4 mb-4 bg-gray-50 border-l-4 border-purple-400"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="font-medium text-gray-700">
+                                      {responseName}
+                                    </span>
+                                    <div className="flex items-center space-x-2">
+                                      <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
+                                        {String(response.http_status || 200)}
+                                      </span>
+                                      {response && typeof response.anchor !== 'undefined' && (
+                                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                                          &{String(response.anchor)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="text-sm text-gray-600">
+                                    <pre className="whitespace-pre-wrap bg-white p-4 rounded border text-sm">
+                                      {JSON.stringify(response.response || {}, null, 2)}
+                                    </pre>
+                                  </div>
+                                </div>
+                              );
+                            }
+                          )}
+                        </div>
+                      </div>
+                    );
+                  } else {
+                    // Flat structure: assume it's a service directly
+                    return renderMockService(categoryName, categoryData);
+                  }
+                })
+                .flat()}
+            </div>
+          )}
+        </div>
+      </div>
       {/* Create Mock Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96 max-w-90vw">
-            <h3 className="text-lg font-bold mb-4">{newMockData.webserviceName && (mocks.webservices as Record<string, unknown>)?.[newMockData.webserviceName] ? 'Add Mock' : 'Create New Webservice'}</h3>
+            <h3 className="text-lg font-bold mb-4">
+              {newMockData.webserviceName &&
+              (mocks.webservices as LooseRecord)?.[newMockData.webserviceName]
+                ? 'Add Mock'
+                : 'Create New Webservice'}
+            </h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Webservice Name</label>
                 <input
                   type="text"
                   value={newMockData.webserviceName}
-                  onChange={(e) => setNewMockData({ ...newMockData, webserviceName: e.target.value })}
+                  onChange={(e) =>
+                    setNewMockData({ ...newMockData, webserviceName: e.target.value })
+                  }
                   className="w-full p-2 border border-gray-300 rounded"
                   placeholder="e.g., User Management API"
-                  disabled={newMockData.webserviceName && (mocks.webservices as Record<string, unknown>)?.[newMockData.webserviceName] !== undefined}
+                  disabled={Boolean(
+                    newMockData.webserviceName &&
+                      (mocks.webservices as LooseRecord)?.[newMockData.webserviceName] !== undefined
+                  )}
                 />
               </div>
-              {(!newMockData.webserviceName || !(mocks.webservices as Record<string, unknown>)?.[newMockData.webserviceName]) && (
+              {(!newMockData.webserviceName ||
+                !(mocks.webservices as Record<string, unknown>)?.[newMockData.webserviceName]) && (
                 <div>
                   <label className="block text-sm font-medium mb-1">Base URL (optional)</label>
                   <input
@@ -568,7 +614,9 @@ const WebServiceMocksEditor: React.FC = () => {
                 <input
                   type="number"
                   value={newMockData.httpStatus}
-                  onChange={(e) => setNewMockData({ ...newMockData, httpStatus: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setNewMockData({ ...newMockData, httpStatus: parseInt(e.target.value) })
+                  }
                   className="w-full p-2 border border-gray-300 rounded"
                 />
               </div>
@@ -602,7 +650,10 @@ const WebServiceMocksEditor: React.FC = () => {
                 onClick={handleCreateMock}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
-                {newMockData.webserviceName && (mocks.webservices as Record<string, unknown>)?.[newMockData.webserviceName] ? 'Add Mock' : 'Create Webservice'}
+                {newMockData.webserviceName &&
+                (mocks.webservices as Record<string, unknown>)?.[newMockData.webserviceName]
+                  ? 'Add Mock'
+                  : 'Create Webservice'}
               </button>
             </div>
           </div>
@@ -620,7 +671,9 @@ const WebServiceMocksEditor: React.FC = () => {
                 <input
                   type="text"
                   value={editServiceData.webserviceName}
-                  onChange={(e) => setEditServiceData({ ...editServiceData, webserviceName: e.target.value })}
+                  onChange={(e) =>
+                    setEditServiceData({ ...editServiceData, webserviceName: e.target.value })
+                  }
                   className="w-full p-2 border border-gray-300 rounded"
                   placeholder="e.g., User Management API"
                 />
@@ -630,7 +683,9 @@ const WebServiceMocksEditor: React.FC = () => {
                 <input
                   type="text"
                   value={editServiceData.baseUrl}
-                  onChange={(e) => setEditServiceData({ ...editServiceData, baseUrl: e.target.value })}
+                  onChange={(e) =>
+                    setEditServiceData({ ...editServiceData, baseUrl: e.target.value })
+                  }
                   className="w-full p-2 border border-gray-300 rounded"
                   placeholder="e.g., https://api.example.com/users"
                 />
@@ -675,7 +730,9 @@ const WebServiceMocksEditor: React.FC = () => {
                 <input
                   type="number"
                   value={editMockData.httpStatus}
-                  onChange={(e) => setEditMockData({ ...editMockData, httpStatus: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setEditMockData({ ...editMockData, httpStatus: parseInt(e.target.value) })
+                  }
                   className="w-full p-2 border border-gray-300 rounded"
                 />
               </div>
@@ -695,7 +752,9 @@ const WebServiceMocksEditor: React.FC = () => {
                   <input
                     type="text"
                     value={editMockData.referenceOf}
-                    onChange={(e) => setEditMockData({ ...editMockData, referenceOf: e.target.value })}
+                    onChange={(e) =>
+                      setEditMockData({ ...editMockData, referenceOf: e.target.value })
+                    }
                     className="w-full p-2 border border-gray-300 rounded"
                     placeholder="e.g., common-error"
                   />
