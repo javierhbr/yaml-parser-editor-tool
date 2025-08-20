@@ -14,16 +14,16 @@ import type { TabType } from './types/yaml-editor.types';
 import { useDataContext } from './context/DataContext';
 
 const YAMLAnchorEditor: React.FC = () => {
-  const { 
-    data, 
-    setData, 
-    fileName, 
-    allAnchors: anchors, 
-    references, 
-    loadFromFile, 
-    exportYaml, 
-    error, 
-    setError 
+  const {
+    data,
+    setData,
+    fileName,
+    allAnchors: anchors,
+    references,
+    loadFromFile,
+    exportYaml,
+    error,
+    setError,
   } = useDataContext();
 
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
@@ -64,14 +64,14 @@ const YAMLAnchorEditor: React.FC = () => {
 
     try {
       await loadFromFile(file);
-      
+
       // Reset UI state after successful load
       const newExpanded = new Set(['root']);
       Object.keys(data).forEach((key) => {
         newExpanded.add(key);
       });
       setExpandedNodes(newExpanded);
-      
+
       setEditingReference(null);
       setCreatingAnchor(null);
       setActiveTab('tree');

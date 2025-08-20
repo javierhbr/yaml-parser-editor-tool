@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Upload, Download, Copy, Check, Eye, EyeOff } from 'lucide-react';
 import VisualEditorElement from './VisualEditor';
-import { updateReference, createAnchor } from '../utils/yaml-utils';
+import { createAnchor } from '../utils/yaml-utils';
 import { useDataContext } from '../context/DataContext';
 
 const UIYamlEditor: React.FC = () => {
   const {
     data: formData,
     setData: setFormData,
-    allAnchors: anchors,
+    anchors,
+    mocksAnchors,
+    allAnchors,
     references,
     loadFromFile,
     exportYaml,
@@ -156,10 +158,26 @@ const UIYamlEditor: React.FC = () => {
 
   const handleSetReference = useCallback(
     (path: string, anchorName: string) => {
-      const newData = updateReference(formData, path, anchorName, anchors);
+      // Simple reference setting - just add the referenceOf property
+      const newData = JSON.parse(JSON.stringify(formData));
+      const pathParts = path.split(/[.[\]]+/).filter(Boolean);
+
+      let current = newData;
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const part = pathParts[i];
+        current = !isNaN(Number(part)) ? current[parseInt(part)] : current[part];
+      }
+
+      const finalKey = pathParts[pathParts.length - 1];
+      const targetNode = !isNaN(Number(finalKey)) ? current[parseInt(finalKey)] : current[finalKey];
+
+      if (targetNode && typeof targetNode === 'object') {
+        (targetNode as Record<string, unknown>).referenceOf = anchorName;
+      }
+
       setFormData(newData);
     },
-    [formData, anchors, setFormData]
+    [formData, setFormData]
   );
 
   const handleRemoveReference = useCallback(
@@ -307,7 +325,8 @@ const UIYamlEditor: React.FC = () => {
           onRemoveReference={handleRemoveReference}
           onEditAnchor={handleEditAnchor}
           onRemoveAnchor={handleRemoveAnchor}
-          anchors={anchors}
+          anchors={allAnchors}
+          mocksAnchors={mocksAnchors}
           references={references}
           showMetadata={showMetadata}
         />
@@ -316,6 +335,9 @@ const UIYamlEditor: React.FC = () => {
     [
       expandedNodes,
       showMetadata,
+      allAnchors,
+      mocksAnchors,
+      references,
       toggleNode,
       updateData,
       addItem,
@@ -325,8 +347,6 @@ const UIYamlEditor: React.FC = () => {
       handleRemoveReference,
       handleEditAnchor,
       handleRemoveAnchor,
-      anchors,
-      references,
     ]
   );
 

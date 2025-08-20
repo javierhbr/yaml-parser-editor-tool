@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { 
-  findAnchors, 
-  findReferences, 
-  parseYamlString, 
-  generateYamlFromJsonWithMetadata 
+import {
+  findAnchors,
+  findReferences,
+  parseYamlString,
+  generateYamlFromJsonWithMetadata,
 } from '../utils/yaml-utils';
 
 interface DataContextType {
@@ -112,18 +112,18 @@ const getDefaultMocks = () => ({
             name: 'John Doe',
             email: 'john.doe@example.com',
             role: 'admin',
-            created_at: '2024-01-15T09:30:00Z'
+            created_at: '2024-01-15T09:30:00Z',
           },
-          anchor: 'user-success-response'
+          anchor: 'user-success-response',
         },
         get_user_not_found: {
           http_status: 404,
           response: {
             error: 'User not found',
             code: 'USER_NOT_FOUND',
-            message: 'The requested user does not exist'
+            message: 'The requested user does not exist',
           },
-          anchor: 'user-not-found-response'
+          anchor: 'user-not-found-response',
         },
         create_user_success: {
           http_status: 201,
@@ -132,10 +132,10 @@ const getDefaultMocks = () => ({
             name: 'Jane Smith',
             email: 'jane.smith@example.com',
             role: 'user',
-            created_at: '2024-01-16T14:22:00Z'
-          }
-        }
-      }
+            created_at: '2024-01-16T14:22:00Z',
+          },
+        },
+      },
     },
     'Authentication Service': {
       base_url: 'https://auth.example.com',
@@ -150,29 +150,29 @@ const getDefaultMocks = () => ({
             user: {
               id: 123,
               name: 'John Doe',
-              email: 'john.doe@example.com'
-            }
+              email: 'john.doe@example.com',
+            },
           },
-          anchor: 'auth-login-success'
+          anchor: 'auth-login-success',
         },
         login_invalid_credentials: {
           http_status: 401,
           response: {
             error: 'invalid_credentials',
             error_description: 'The username or password is incorrect',
-            code: 'AUTH_FAILED'
-          }
+            code: 'AUTH_FAILED',
+          },
         },
         refresh_token_expired: {
           http_status: 401,
           response: {
             error: 'token_expired',
             error_description: 'The refresh token has expired',
-            code: 'TOKEN_EXPIRED'
+            code: 'TOKEN_EXPIRED',
           },
-          referenceOf: 'common-unauthorized'
-        }
-      }
+          referenceOf: 'common-unauthorized',
+        },
+      },
     },
     'Payment Processing API': {
       base_url: 'https://payments.example.com',
@@ -187,11 +187,11 @@ const getDefaultMocks = () => ({
             payment_method: {
               type: 'credit_card',
               last_four: '4242',
-              brand: 'visa'
+              brand: 'visa',
             },
-            created_at: '2024-01-16T10:30:00Z'
+            created_at: '2024-01-16T10:30:00Z',
           },
-          anchor: 'payment-success'
+          anchor: 'payment-success',
         },
         payment_declined: {
           http_status: 402,
@@ -200,19 +200,19 @@ const getDefaultMocks = () => ({
             code: 'PAYMENT_DECLINED',
             message: 'Your card was declined',
             decline_reason: 'insufficient_funds',
-            transaction_id: 'txn_1234567891'
-          }
+            transaction_id: 'txn_1234567891',
+          },
         },
         payment_processing: {
           http_status: 202,
           response: {
             transaction_id: 'txn_1234567892',
             status: 'processing',
-            message: 'Payment is being processed'
-          }
-        }
-      }
-    }
+            message: 'Payment is being processed',
+          },
+        },
+      },
+    },
   },
   common_responses: {
     server_error: {
@@ -222,9 +222,9 @@ const getDefaultMocks = () => ({
         message: 'An unexpected error occurred',
         code: 'INTERNAL_ERROR',
         timestamp: '2024-01-16T12:00:00Z',
-        request_id: 'req_abc123def456'
+        request_id: 'req_abc123def456',
       },
-      anchor: 'common-server-error'
+      anchor: 'common-server-error',
     },
     validation_error: {
       http_status: 400,
@@ -235,22 +235,22 @@ const getDefaultMocks = () => ({
         details: [
           {
             field: 'email',
-            message: 'Invalid email format'
-          }
-        ]
+            message: 'Invalid email format',
+          },
+        ],
       },
-      anchor: 'common-validation-error'
+      anchor: 'common-validation-error',
     },
     unauthorized: {
       http_status: 401,
       response: {
         error: 'unauthorized',
         message: 'Authentication required',
-        code: 'AUTH_REQUIRED'
+        code: 'AUTH_REQUIRED',
       },
-      anchor: 'common-unauthorized'
-    }
-  }
+      anchor: 'common-unauthorized',
+    },
+  },
 });
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -261,9 +261,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [error, setError] = useState<string | null>(null);
 
   const anchors = findAnchors(data);
-  const references = findReferences(data).map(ref => ({ ...ref, anchorName: ref.anchor }));
+  const references = findReferences(data).map((ref) => ({ ...ref, anchorName: ref.anchor }));
   const mocksAnchors = findAnchors(mocks);
-  const mocksReferences = findReferences(mocks).map(ref => ({ ...ref, anchorName: ref.anchor }));
+  const mocksReferences = findReferences(mocks).map((ref) => ({ ...ref, anchorName: ref.anchor }));
   const allAnchors = { ...anchors, ...mocksAnchors };
 
   const setData = useCallback((newData: Record<string, unknown>) => {
@@ -276,51 +276,57 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null);
   }, []);
 
-  const loadFromFile = useCallback(async (file: File) => {
-    try {
-      const content = await file.text();
-      let parsedData: Record<string, unknown>;
+  const loadFromFile = useCallback(
+    async (file: File) => {
+      try {
+        const content = await file.text();
+        let parsedData: Record<string, unknown>;
 
-      if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
-        parsedData = parseYamlString(content);
-      } else if (file.name.endsWith('.json')) {
-        parsedData = JSON.parse(content);
-      } else {
-        throw new Error('Please upload a YAML (.yaml, .yml) or JSON (.json) file');
+        if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
+          parsedData = parseYamlString(content);
+        } else if (file.name.endsWith('.json')) {
+          parsedData = JSON.parse(content);
+        } else {
+          throw new Error('Please upload a YAML (.yaml, .yml) or JSON (.json) file');
+        }
+
+        setData(parsedData);
+        setFileName(file.name);
+        setError(null);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+        setError(`Error loading file: ${errorMessage}`);
+        throw err;
       }
+    },
+    [setData]
+  );
 
-      setData(parsedData);
-      setFileName(file.name);
-      setError(null);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(`Error loading file: ${errorMessage}`);
-      throw err;
-    }
-  }, [setData]);
+  const loadMocksFromFile = useCallback(
+    async (file: File) => {
+      try {
+        const content = await file.text();
+        let parsedData: Record<string, unknown>;
 
-  const loadMocksFromFile = useCallback(async (file: File) => {
-    try {
-      const content = await file.text();
-      let parsedData: Record<string, unknown>;
+        if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
+          parsedData = parseYamlString(content);
+        } else if (file.name.endsWith('.json')) {
+          parsedData = JSON.parse(content);
+        } else {
+          throw new Error('Please upload a YAML (.yaml, .yml) or JSON (.json) file');
+        }
 
-      if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
-        parsedData = parseYamlString(content);
-      } else if (file.name.endsWith('.json')) {
-        parsedData = JSON.parse(content);
-      } else {
-        throw new Error('Please upload a YAML (.yaml, .yml) or JSON (.json) file');
+        setMocks(parsedData);
+        setMocksFileName(file.name);
+        setError(null);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+        setError(`Error loading mocks file: ${errorMessage}`);
+        throw err;
       }
-
-      setMocks(parsedData);
-      setMocksFileName(file.name);
-      setError(null);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(`Error loading mocks file: ${errorMessage}`);
-      throw err;
-    }
-  }, [setMocks]);
+    },
+    [setMocks]
+  );
 
   const exportYaml = useCallback(() => {
     try {

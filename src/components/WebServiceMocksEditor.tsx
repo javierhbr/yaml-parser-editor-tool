@@ -385,6 +385,74 @@ const WebServiceMocksEditor: React.FC = () => {
                     )}
                   </div>
                   <div className="flex items-center space-x-1">
+                    <select
+                      value={
+                        String(mock.referenceOf || '') &&
+                        Object.keys(mocksAnchors || {}).includes(String(mock.referenceOf || ''))
+                          ? `Mock:${String(mock.referenceOf || '')}`
+                          : String(mock.referenceOf || '')
+                      }
+                      onChange={(e) => {
+                        const newMocks = { ...mocks };
+                        const webservices = (newMocks.webservices as Record<string, unknown>) || {};
+                        const service =
+                          (webservices[webserviceName] as Record<string, unknown>) || {};
+                        const serviceMocks = (service.mocks as Record<string, unknown>) || {};
+                        const mockObj = serviceMocks[mockName] as Record<string, unknown>;
+                        const mockData = mockObj ? { ...mockObj } : {};
+
+                        if (e.target.value === '__remove__' || e.target.value === '') {
+                          delete mockData.referenceOf;
+                        } else {
+                          const actualValue = e.target.value.startsWith('Mock:')
+                            ? e.target.value.replace('Mock:', '')
+                            : e.target.value;
+                          mockData.referenceOf = actualValue;
+                        }
+
+                        serviceMocks[mockName] = mockData;
+                        service.mocks = serviceMocks;
+                        webservices[webserviceName] = service;
+                        newMocks.webservices = webservices;
+                        setMocks(newMocks);
+                      }}
+                      className="px-2 py-1 text-xs border border-gray-300 rounded bg-white hover:bg-gray-50"
+                      title="Set Reference"
+                    >
+                      <option value="">— Select Reference —</option>
+                      {String(mock.referenceOf || '') && (
+                        <option
+                          value={
+                            Object.keys(mocksAnchors || {}).includes(String(mock.referenceOf || ''))
+                              ? `Mock:${String(mock.referenceOf)}`
+                              : String(mock.referenceOf)
+                          }
+                        >
+                          Current:{' '}
+                          {Object.keys(mocksAnchors || {}).includes(String(mock.referenceOf || ''))
+                            ? 'Mock: '
+                            : ''}
+                          *{String(mock.referenceOf)}
+                        </option>
+                      )}
+                      {String(mock.referenceOf || '') && (
+                        <option value="__remove__">✕ Remove Reference</option>
+                      )}
+                      {Object.keys(mocksAnchors || {}).length === 0 && (
+                        <option disabled>No anchors available</option>
+                      )}
+                      {Object.keys(mocksAnchors || {})
+                        .filter(
+                          (a) =>
+                            a !== String(mock.anchor) &&
+                            a !== String(mock.referenceOf).replace('Mock:', '')
+                        )
+                        .map((anchorName) => (
+                          <option key={anchorName} value={`Mock:${anchorName}`}>
+                            Mock: *{anchorName}
+                          </option>
+                        ))}
+                    </select>
                     <button
                       onClick={() => handleEditMock(webserviceName, mockName)}
                       className="p-1 text-blue-600 hover:bg-blue-50 rounded"
@@ -549,10 +617,10 @@ const WebServiceMocksEditor: React.FC = () => {
                                   className="card w-full border border-gray-300 rounded-lg p-4 mb-4 bg-gray-50 border-l-4 border-purple-400"
                                 >
                                   <div className="flex items-center justify-between mb-2">
-                                    <span className="font-medium text-gray-700">
-                                      {responseName}
-                                    </span>
                                     <div className="flex items-center space-x-2">
+                                      <span className="font-medium text-gray-700">
+                                        {responseName}
+                                      </span>
                                       <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
                                         {String(response.http_status || 200)}
                                       </span>
@@ -562,6 +630,96 @@ const WebServiceMocksEditor: React.FC = () => {
                                           {String(response.anchor)}
                                         </span>
                                       )}
+                                      {response && typeof response.referenceOf !== 'undefined' && (
+                                        <span className="px-2 py-1 inline-flex items-center gap-1 bg-green-100 text-green-800 text-xs rounded">
+                                          <Link size={12} />
+                                          {String(response.referenceOf)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center space-x-1">
+                                      <select
+                                        value={
+                                          String(response.referenceOf || '') &&
+                                          Object.keys(mocksAnchors || {}).includes(
+                                            String(response.referenceOf || '')
+                                          )
+                                            ? `Mock:${String(response.referenceOf || '')}`
+                                            : String(response.referenceOf || '')
+                                        }
+                                        onChange={(e) => {
+                                          const newMocks = { ...mocks };
+                                          const categoryObj = newMocks[categoryName] as Record<
+                                            string,
+                                            unknown
+                                          >;
+                                          const category = categoryObj ? { ...categoryObj } : {};
+                                          const responseObj = category[responseName] as Record<
+                                            string,
+                                            unknown
+                                          >;
+                                          const responseData = responseObj
+                                            ? { ...responseObj }
+                                            : {};
+
+                                          if (
+                                            e.target.value === '__remove__' ||
+                                            e.target.value === ''
+                                          ) {
+                                            delete responseData.referenceOf;
+                                          } else {
+                                            const actualValue = e.target.value.startsWith('Mock:')
+                                              ? e.target.value.replace('Mock:', '')
+                                              : e.target.value;
+                                            responseData.referenceOf = actualValue;
+                                          }
+
+                                          category[responseName] = responseData;
+                                          (newMocks as Record<string, unknown>)[categoryName] =
+                                            category;
+                                          setMocks(newMocks);
+                                        }}
+                                        className="px-2 py-1 text-xs border border-gray-300 rounded bg-white hover:bg-gray-50"
+                                        title="Set Reference"
+                                      >
+                                        <option value="">— Select Reference —</option>
+                                        {String(response.referenceOf || '') && (
+                                          <option
+                                            value={
+                                              Object.keys(mocksAnchors || {}).includes(
+                                                String(response.referenceOf || '')
+                                              )
+                                                ? `Mock:${String(response.referenceOf)}`
+                                                : String(response.referenceOf)
+                                            }
+                                          >
+                                            Current:{' '}
+                                            {Object.keys(mocksAnchors || {}).includes(
+                                              String(response.referenceOf || '')
+                                            )
+                                              ? 'Mock: '
+                                              : ''}
+                                            *{String(response.referenceOf)}
+                                          </option>
+                                        )}
+                                        {String(response.referenceOf || '') && (
+                                          <option value="__remove__">✕ Remove Reference</option>
+                                        )}
+                                        {Object.keys(mocksAnchors || {}).length === 0 && (
+                                          <option disabled>No anchors available</option>
+                                        )}
+                                        {Object.keys(mocksAnchors || {})
+                                          .filter(
+                                            (a) =>
+                                              a !== String(response.anchor) &&
+                                              a !== String(response.referenceOf)
+                                          )
+                                          .map((anchorName) => (
+                                            <option key={anchorName} value={`Mock:${anchorName}`}>
+                                              Mock: *{anchorName}
+                                            </option>
+                                          ))}
+                                      </select>
                                     </div>
                                   </div>
                                   <div className="text-sm text-gray-600">
@@ -683,13 +841,19 @@ const WebServiceMocksEditor: React.FC = () => {
                       Reference Of (optional)
                     </label>
                     <select
-                      value={newMockData.referenceOf || ''}
+                      value={
+                        newMockData.referenceOf &&
+                        Object.keys(mocksAnchors || {}).includes(newMockData.referenceOf)
+                          ? `Mock:${newMockData.referenceOf}`
+                          : newMockData.referenceOf || ''
+                      }
                       onChange={(e) => {
                         const v = e.target.value;
                         if (v === '__remove__') {
                           setNewMockData({ ...newMockData, referenceOf: '' });
                         } else {
-                          setNewMockData({ ...newMockData, referenceOf: v });
+                          const actualValue = v.startsWith('Mock:') ? v.replace('Mock:', '') : v;
+                          setNewMockData({ ...newMockData, referenceOf: actualValue });
                         }
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded bg-white"
@@ -697,8 +861,8 @@ const WebServiceMocksEditor: React.FC = () => {
                       <option value="">Set Reference...</option>
                       <option value="__remove__">🗑️ Remove Reference</option>
                       {Object.keys(mocksAnchors || {}).map((anchorName) => (
-                        <option key={anchorName} value={anchorName}>
-                          *{anchorName}
+                        <option key={anchorName} value={`Mock:${anchorName}`}>
+                          Mock: *{anchorName}
                         </option>
                       ))}
                     </select>
@@ -848,27 +1012,45 @@ const WebServiceMocksEditor: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1">Reference Of (optional)</label>
                   <select
-                    value={editMockData.referenceOf || ''}
+                    value={
+                      editMockData.referenceOf &&
+                      Object.keys(mocksAnchors || {}).includes(editMockData.referenceOf)
+                        ? `Mock:${editMockData.referenceOf}`
+                        : editMockData.referenceOf || ''
+                    }
                     onChange={(e) => {
                       const v = e.target.value;
                       if (v === '__remove__') {
                         setEditMockData({ ...editMockData, referenceOf: '' });
                       } else {
-                        setEditMockData({ ...editMockData, referenceOf: v });
+                        const actualValue = v.startsWith('Mock:') ? v.replace('Mock:', '') : v;
+                        setEditMockData({ ...editMockData, referenceOf: actualValue });
                       }
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded bg-white"
                   >
                     <option value="">Set Reference...</option>
                     {editMockData.referenceOf && (
-                      <option value={editMockData.referenceOf}>*{editMockData.referenceOf}</option>
+                      <option
+                        value={
+                          Object.keys(mocksAnchors || {}).includes(editMockData.referenceOf)
+                            ? `Mock:${editMockData.referenceOf}`
+                            : editMockData.referenceOf
+                        }
+                      >
+                        Current:{' '}
+                        {Object.keys(mocksAnchors || {}).includes(editMockData.referenceOf)
+                          ? 'Mock: '
+                          : ''}
+                        *{editMockData.referenceOf}
+                      </option>
                     )}
                     <option value="__remove__">🗑️ Remove Reference</option>
                     {Object.keys(mocksAnchors || {})
                       .filter((a) => a !== editMockData.anchor)
                       .map((anchorName) => (
-                        <option key={anchorName} value={anchorName}>
-                          *{anchorName}
+                        <option key={anchorName} value={`Mock:${anchorName}`}>
+                          Mock: *{anchorName}
                         </option>
                       ))}
                   </select>

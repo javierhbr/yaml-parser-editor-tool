@@ -28,6 +28,7 @@ const VisualEditorElement = ({
   onEditAnchor,
   onRemoveAnchor,
   anchors = {},
+  mocksAnchors = {},
   references = [],
   showMetadata = true,
 }) => {
@@ -216,17 +217,26 @@ const VisualEditorElement = ({
                     }
                   }}
                 >
-                  <option value={item.referenceOf}>*{item.referenceOf}</option>
+                  <option value={item.referenceOf}>
+                    {mocksAnchors && Object.keys(mocksAnchors).includes(item.referenceOf)
+                      ? `Mock: *${item.referenceOf}`
+                      : `*${item.referenceOf}`}
+                  </option>
                   <option value="__remove__" className="text-red-600">
                     🗑️ Remove Reference
                   </option>
                   {Object.keys(anchors)
                     .filter((name) => name !== item.referenceOf && name !== item.anchor)
-                    .map((anchorName) => (
-                      <option key={anchorName} value={anchorName}>
-                        *{anchorName}
-                      </option>
-                    ))}
+                    .map((anchorName) => {
+                      const isMockAnchor =
+                        mocksAnchors && Object.keys(mocksAnchors).includes(anchorName);
+                      const display = isMockAnchor ? `Mock: *${anchorName}` : `*${anchorName}`;
+                      return (
+                        <option key={anchorName} value={anchorName}>
+                          {display}
+                        </option>
+                      );
+                    })}
                 </select>
               ) : (
                 <select
@@ -241,11 +251,16 @@ const VisualEditorElement = ({
                   <option value="">Set Reference...</option>
                   {Object.keys(anchors)
                     .filter((anchorName) => anchorName !== item.anchor)
-                    .map((anchorName) => (
-                      <option key={anchorName} value={anchorName}>
-                        *{anchorName}
-                      </option>
-                    ))}
+                    .map((anchorName) => {
+                      const isMockAnchor =
+                        mocksAnchors && Object.keys(mocksAnchors).includes(anchorName);
+                      const display = isMockAnchor ? `Mock: *${anchorName}` : `*${anchorName}`;
+                      return (
+                        <option key={anchorName} value={anchorName}>
+                          {display}
+                        </option>
+                      );
+                    })}
                 </select>
               )}
             </div>
@@ -428,17 +443,26 @@ const VisualEditorElement = ({
                       }
                     }}
                   >
-                    <option value={value.referenceOf}>*{value.referenceOf}</option>
+                    <option value={value.referenceOf}>
+                      {mocksAnchors && Object.keys(mocksAnchors).includes(value.referenceOf)
+                        ? `Mock: *${value.referenceOf}`
+                        : `*${value.referenceOf}`}
+                    </option>
                     <option value="__remove__" className="text-red-600">
                       🗑️ Remove Reference
                     </option>
                     {Object.keys(anchors)
                       .filter((name) => name !== value.referenceOf && name !== value.anchor)
-                      .map((anchorName) => (
-                        <option key={anchorName} value={anchorName}>
-                          *{anchorName}
-                        </option>
-                      ))}
+                      .map((anchorName) => {
+                        const isMockAnchor =
+                          mocksAnchors && Object.keys(mocksAnchors).includes(anchorName);
+                        const display = isMockAnchor ? `Mock: *${anchorName}` : `*${anchorName}`;
+                        return (
+                          <option key={anchorName} value={anchorName}>
+                            {display}
+                          </option>
+                        );
+                      })}
                   </select>
                 ) : (
                   <div className="flex items-center gap-1">
@@ -454,11 +478,16 @@ const VisualEditorElement = ({
                       <option value="">Set Reference...</option>
                       {Object.keys(anchors)
                         .filter((anchorName) => anchorName !== value.anchor)
-                        .map((anchorName) => (
-                          <option key={anchorName} value={anchorName}>
-                            *{anchorName}
-                          </option>
-                        ))}
+                        .map((anchorName) => {
+                          const isMockAnchor =
+                            mocksAnchors && Object.keys(mocksAnchors).includes(anchorName);
+                          const display = isMockAnchor ? `Mock: *${anchorName}` : `*${anchorName}`;
+                          return (
+                            <option key={anchorName} value={anchorName}>
+                              {display}
+                            </option>
+                          );
+                        })}
                     </select>
                     <Target size={14} className="text-green-600" />
                   </div>
@@ -535,6 +564,7 @@ const VisualEditorElement = ({
                           onEditAnchor={onEditAnchor}
                           onRemoveAnchor={onRemoveAnchor}
                           anchors={anchors}
+                          mocksAnchors={mocksAnchors}
                           references={references}
                           showMetadata={showMetadata}
                         />
